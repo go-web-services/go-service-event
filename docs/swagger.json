@@ -1,0 +1,424 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Event Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/v1/events/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Create new event",
+                "parameters": [
+                    {
+                        "description": "Create Event Request",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/events/delete": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Soft delete event (sets deleted_at)",
+                "parameters": [
+                    {
+                        "description": "Delete Event Request",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/events/detail": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get event detail",
+                "parameters": [
+                    {
+                        "description": "Get Event Request",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/events/query": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Returns list of events by query",
+                "parameters": [
+                    {
+                        "description": "Query parameters",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/events/update": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update event",
+                "parameters": [
+                    {
+                        "description": "Update Event Request",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO": {
+            "type": "object",
+            "required": [
+                "name",
+                "payload",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1024
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO": {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "page": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "sort": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1024
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                },
+                "type": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "processed",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "EventStatusPending",
+                "EventStatusProcessed",
+                "EventStatusFailed"
+            ]
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_enum.EventType": {
+            "type": "string",
+            "enum": [
+                "user",
+                "system",
+                "webhook"
+            ],
+            "x-enum-varnames": [
+                "EventTypeUser",
+                "EventTypeSystem",
+                "EventTypeWebhook"
+            ]
+        }
+    }
+}

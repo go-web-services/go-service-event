@@ -1,0 +1,49 @@
+services:
+  go-service-event:
+    container_name: go-service-event
+    build:
+      context: .
+      dockerfile: debug/Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    command: sh -c 'goose -dir ./migrations postgres "host=$${POSTGRES_HOST} port=$${POSTGRES_PORT} user=$${POSTGRES_USER} password=$${POSTGRES_PASSWORD} dbname=$${POSTGRES_DB} sslmode=$${POSTGRES_SSL_MODE}" up && go run cmd/app/main.go'
+    volumes:
+      - .:/app
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      go-service-event-db:
+        condition: service_healthy
+    networks:
+      - go-network
+
+  go-service-event-db:
+    container_name: go-service-event-db
+    image: postgres:15
+    ports:
+      - "5437:${POSTGRES_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - go-network
+volumes:
+  postgres-data:
+
+
+networks:
+  go-network:
+    external: true
+    driver: bridge

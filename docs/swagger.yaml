@@ -1,0 +1,279 @@
+basePath: /api
+definitions:
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO:
+    properties:
+      description:
+        maxLength: 1024
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      payload:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
+      type:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+    required:
+    - name
+    - payload
+    - status
+    - type
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO:
+    properties:
+      event:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      payload:
+        type: string
+      slug:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
+      type:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+      updated_at:
+        type: string
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO:
+    properties:
+      event:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+      message:
+        type: string
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO:
+    properties:
+      event:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO:
+    properties:
+      pagination:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO:
+    properties:
+      ids:
+        items:
+          type: string
+        type: array
+      limit:
+        maximum: 100
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 255
+        type: string
+      page:
+        minimum: 1
+        type: integer
+      sort:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
+      type:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        type: array
+      meta:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO:
+    properties:
+      description:
+        maxLength: 1024
+        type: string
+      id:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      payload:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
+      type:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+    required:
+    - id
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO:
+    properties:
+      event:
+        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus:
+    enum:
+    - pending
+    - processed
+    - failed
+    type: string
+    x-enum-varnames:
+    - EventStatusPending
+    - EventStatusProcessed
+    - EventStatusFailed
+  github_com_Lomank123_go-service-event_pkg_client_enum.EventType:
+    enum:
+    - user
+    - system
+    - webhook
+    type: string
+    x-enum-varnames:
+    - EventTypeUser
+    - EventTypeSystem
+    - EventTypeWebhook
+info:
+  contact: {}
+  title: Event Service API
+  version: "1.0"
+paths:
+  /v1/events/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create Event Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO'
+      summary: Create new event
+      tags:
+      - Events
+  /v1/events/delete:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Delete Event Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO'
+      summary: Soft delete event (sets deleted_at)
+      tags:
+      - Events
+  /v1/events/detail:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Get Event Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO'
+      summary: Get event detail
+      tags:
+      - Events
+  /v1/events/query:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Query parameters
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO'
+      summary: Returns list of events by query
+      tags:
+      - Events
+  /v1/events/update:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update Event Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO'
+      summary: Update event
+      tags:
+      - Events
+swagger: "2.0"
