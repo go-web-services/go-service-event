@@ -4,30 +4,25 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Lomank123/go-service-event/internal/domain"
 	"github.com/Lomank123/go-service-event/internal/repository"
 	"github.com/Lomank123/go-service-event/internal/types"
-	"github.com/Lomank123/go-service-event/pkg/client/enum"
 	platformTypes "github.com/Lomank123/go-web-platform/types"
 )
 
 type EventService interface {
 	Detail(ctx context.Context, id string) (*domain.Event, error)
-	Create(
-		ctx context.Context,
-		name, description, payload string,
-		eventType enum.EventType,
-		status enum.EventStatus,
-	) (*domain.Event, error)
+	Create(ctx context.Context, ev *domain.Event) (*domain.Event, error)
 	Update(
 		ctx context.Context,
-		id, name, description, payload string,
-		eventType enum.EventType,
-		status enum.EventStatus,
+		id string,
+		name *string,
+		payload *map[string]any,
+		userID *string,
+		sessionID *string,
 	) (*domain.Event, error)
 	Delete(ctx context.Context, id string) (*domain.Event, error)
 	Query(ctx context.Context, filter types.EventFilter, sort []string, pagination platformTypes.PaginationInputParams) ([]domain.Event, platformTypes.PaginationOutputParams, error)
@@ -45,31 +40,11 @@ func (s *eventService) Detail(ctx context.Context, id string) (*domain.Event, er
 	return s.repo.GetByID(ctx, id)
 }
 
-func generateSlug(s string) string {
-	s = strings.ToLower(s)
-	reg := regexp.MustCompile(`[^a-z0-9]+`)
-	s = reg.ReplaceAllString(s, "-")
-	return strings.Trim(s, "-")
-}
-
-func (s *eventService) Create(
-	ctx context.Context,
-	name, description, payload string,
-	eventType enum.EventType,
-	status enum.EventStatus,
-) (*domain.Event, error) {
-	now := time.Now()
-	slug := generateSlug(name)
-
-	ev := &domain.Event{
-		Name:        name,
-		Slug:        slug,
-		Description: description,
-		Type:        eventType,
-		Payload:     payload,
-		Status:      status,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+func (s *eventService) Create(ctx context.Context, ev *domain.Event) (*domain.Event, error) {
+	now := time.Now().UTC()
+	ev.ReceivedAt = now
+	if ev.Payload == nil {
+		ev.Payload = map[string]any{}
 	}
 
 	if err := s.repo.Create(ctx, ev); err != nil {
@@ -81,30 +56,28 @@ func (s *eventService) Create(
 
 func (s *eventService) Update(
 	ctx context.Context,
-	id, name, description, payload string,
-	eventType enum.EventType,
-	status enum.EventStatus,
+	id string,
+	name *string,
+	payload *map[string]any,
+	userID *string,
+	sessionID *string,
 ) (*domain.Event, error) {
 	ev, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if name != "" {
-		ev.Name = name
-		ev.Slug = generateSlug(name)
+	if name != nil {
+		ev.Name = strings.TrimSpace(*name)
 	}
-	if description != "" {
-		ev.Description = description
+	if payload != nil {
+		ev.Payload = *payload
 	}
-	if payload != "" {
-		ev.Payload = payload
+	if userID != nil {
+		ev.UserID = userID
 	}
-	if eventType != "" {
-		ev.Type = eventType
-	}
-	if status != "" {
-		ev.Status = status
+	if sessionID != nil {
+		ev.SessionID = sessionID
 	}
 
 	if err := s.repo.Update(ctx, ev); err != nil {
@@ -129,14 +102,29 @@ func (s *eventService) Query(
 	if len(filter.IDs) > 0 {
 		filters["id"] = filter.IDs
 	}
+	if filter.ProjectID != nil {
+		filters["project_id"] = *filter.ProjectID
+	}
+	if filter.DistinctID != nil {
+		filters["distinct_id"] = *filter.DistinctID
+	}
 	if filter.Name != nil {
 		filters["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
 	}
-	if filter.Type != nil {
-		filters["event_type"] = *filter.Type
+	if filter.MessageID != nil {
+		filters["message_id"] = *filter.MessageID
 	}
-	if filter.Status != nil {
-		filters["status"] = *filter.Status
+	if filter.UserID != nil {
+		filters["user_id"] = *filter.UserID
+	}
+	if filter.SessionID != nil {
+		filters["session_id"] = *filter.SessionID
+	}
+	if filter.IP != nil {
+		filters["ip"] = *filter.IP
+	}
+	if filter.UserAgent != nil {
+		filters["user_agent"] = *filter.UserAgent
 	}
 
 	count, err := s.repo.Count(ctx, filters)

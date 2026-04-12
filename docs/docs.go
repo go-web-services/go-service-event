@@ -17,6 +17,7 @@ const docTemplate = `{
     "paths": {
         "/v1/events/create": {
             "post": {
+                "description": "Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are not sent in JSON; the server sets them from the HTTP request.",
                 "consumes": [
                     "application/json"
                 ],
@@ -26,10 +27,10 @@ const docTemplate = `{
                 "tags": [
                     "Events"
                 ],
-                "summary": "Create new event",
+                "summary": "Ingest analytics event",
                 "parameters": [
                     {
-                        "description": "Create Event Request",
+                        "description": "Event payload (see model for per-field descriptions)",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -185,28 +186,54 @@ const docTemplate = `{
         "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO": {
             "type": "object",
             "required": [
+                "distinct_id",
+                "message_id",
                 "name",
+                "occurred_at",
                 "payload",
-                "status",
-                "type"
+                "project_id"
             ],
             "properties": {
-                "description": {
+                "distinct_id": {
+                    "description": "DistinctID is the stable person/device id for analytics (e.g. UUID in localStorage until login).",
                     "type": "string",
-                    "maxLength": 1024
+                    "example": "anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                },
+                "message_id": {
+                    "description": "MessageID is a new UUID per request so retries do not duplicate rows (idempotency key).",
+                    "type": "string",
+                    "example": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
                 },
                 "name": {
+                    "description": "Name is the event key (snake_case recommended), e.g. signup_started, purchase_completed.",
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "example": "page_viewed"
+                },
+                "occurred_at": {
+                    "description": "OccurredAt is client-side event time in RFC3339 (used with server received_at for clock skew).",
+                    "type": "string",
+                    "example": "2026-04-12T10:30:00.123Z"
                 },
                 "payload": {
-                    "type": "string"
+                    "description": "Payload is a JSON object of custom properties (strings, numbers, booleans) for this event.",
+                    "type": "object",
+                    "additionalProperties": {}
                 },
-                "status": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                "project_id": {
+                    "description": "ProjectID identifies which product or tenant this event belongs to (from API key, config, or backend caller).",
+                    "type": "string",
+                    "example": "proj_live_01"
                 },
-                "type": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                "session_id": {
+                    "description": "SessionID ties events to one browser session or visit; omit if not tracking sessions.",
+                    "type": "string",
+                    "example": "sess_01j8xyz"
+                },
+                "user_id": {
+                    "description": "UserID is your application’s user id when the visitor is authenticated; omit if anonymous.",
+                    "type": "string",
+                    "example": "usr_42"
                 }
             }
         },
@@ -214,42 +241,81 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "event": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    "description": "Event is the stored row including server id, received_at, and connection-derived ip / user_agent when present.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                        }
+                    ]
                 }
             }
         },
         "github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "deleted_at": {
+                    "description": "DeletedAt is set when the row is soft-deleted.",
                     "type": "string"
                 },
-                "description": {
-                    "type": "string"
+                "distinct_id": {
+                    "description": "DistinctID is the stable analytics identity (e.g. anonymous id in localStorage) for funnels and retention.",
+                    "type": "string",
+                    "example": "anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8"
                 },
                 "id": {
-                    "type": "string"
+                    "description": "ID is the server-generated UUID for this stored row.",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "ip": {
+                    "description": "IP is the client address as seen at ingest (set by the server from the HTTP request, not the JSON body).",
+                    "type": "string",
+                    "example": "203.0.113.10"
+                },
+                "message_id": {
+                    "description": "MessageID uniquely identifies this delivery; use a new UUID per HTTP request for idempotent retries.",
+                    "type": "string",
+                    "example": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
                 },
                 "name": {
-                    "type": "string"
+                    "description": "Name is the event name / type key (e.g. page_viewed, button_clicked).",
+                    "type": "string",
+                    "example": "page_viewed"
+                },
+                "occurred_at": {
+                    "description": "OccurredAt is when the action happened on the client (RFC3339); may differ from server time.",
+                    "type": "string",
+                    "example": "2026-04-12T10:30:00Z"
                 },
                 "payload": {
-                    "type": "string"
+                    "description": "Payload holds arbitrary JSON properties for segmentation and reporting.",
+                    "type": "object",
+                    "additionalProperties": {}
                 },
-                "slug": {
-                    "type": "string"
+                "project_id": {
+                    "description": "ProjectID scopes the event to one product or tenant (from your API key, env, or calling service).",
+                    "type": "string",
+                    "example": "proj_live_01"
                 },
-                "status": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                "received_at": {
+                    "description": "ReceivedAt is when this service persisted the event (set by the server).",
+                    "type": "string",
+                    "example": "2026-04-12T10:30:00.456Z"
                 },
-                "type": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                "session_id": {
+                    "description": "SessionID groups events within one visit or tab session; optional for server-only events.",
+                    "type": "string",
+                    "example": "sess_01j8xyz"
                 },
-                "updated_at": {
-                    "type": "string"
+                "user_agent": {
+                    "description": "UserAgent is the raw User-Agent header at ingest (set by the server).",
+                    "type": "string",
+                    "example": "Mozilla/5.0 ..."
+                },
+                "user_id": {
+                    "description": "UserID is your logged-in account id when available; omitted before authentication.",
+                    "type": "string",
+                    "example": "usr_42"
                 }
             }
         },
@@ -305,16 +371,25 @@ const docTemplate = `{
         "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO": {
             "type": "object",
             "properties": {
+                "distinct_id": {
+                    "type": "string"
+                },
                 "ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
+                "ip": {
+                    "type": "string"
+                },
                 "limit": {
                     "type": "integer",
                     "maximum": 100,
                     "minimum": 1
+                },
+                "message_id": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string",
@@ -324,14 +399,20 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
+                "project_id": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
+                },
                 "sort": {
                     "type": "string"
                 },
-                "status": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
+                "user_agent": {
+                    "type": "string"
                 },
-                "type": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -355,25 +436,23 @@ const docTemplate = `{
                 "id"
             ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 1024
-                },
                 "id": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "minLength": 1
                 },
                 "payload": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "session_id": {
                     "type": "string"
                 },
-                "status": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType"
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -401,32 +480,6 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
-        },
-        "github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus": {
-            "type": "string",
-            "enum": [
-                "pending",
-                "processed",
-                "failed"
-            ],
-            "x-enum-varnames": [
-                "EventStatusPending",
-                "EventStatusProcessed",
-                "EventStatusFailed"
-            ]
-        },
-        "github_com_Lomank123_go-service-event_pkg_client_enum.EventType": {
-            "type": "string",
-            "enum": [
-                "user",
-                "system",
-                "webhook"
-            ],
-            "x-enum-varnames": [
-                "EventTypeUser",
-                "EventTypeSystem",
-                "EventTypeWebhook"
-            ]
         }
     }
 }`

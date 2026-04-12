@@ -1,40 +1,52 @@
 -- +goose up
--- +goose StatementBegin
-DO $$
-BEGIN
-	IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column') THEN
-		CREATE FUNCTION update_updated_at_column()
-		RETURNS TRIGGER AS $func$
-		BEGIN
-			NEW.updated_at = NOW();
-			RETURN NEW;
-		END;
-		$func$ language 'plpgsql';
-	END IF;
-END;
-$$;
--- +goose StatementEnd
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    distinct_id TEXT NOT NULL,
+    user_id TEXT,
+    session_id TEXT,
+    ip TEXT,
+    user_agent TEXT,
     name TEXT NOT NULL,
-    slug TEXT NOT NULL UNIQUE,
-    description TEXT,
-    event_type TEXT NOT NULL,
-    payload TEXT NOT NULL,
-    status TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    occurred_at TIMESTAMPTZ NOT NULL,
+    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
+    CONSTRAINT events_project_message_unique UNIQUE (project_id, message_id)
 );
 
-CREATE TRIGGER update_events_updated_at
-BEFORE UPDATE ON events
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+-- Time-ordered reads per project (dashboards, tail queries).
+CREATE INDEX IF NOT EXISTS events_project_occurred_at_idx
+    ON events (project_id, occurred_at DESC)
+    WHERE deleted_at IS NULL;
+
+-- Per-user / anonymous timelines (distinct_id).
+CREATE INDEX IF NOT EXISTS events_project_distinct_occurred_idx
+    ON events (project_id, distinct_id, occurred_at DESC)
+    WHERE deleted_at IS NULL;
+
+-- Session-scoped queries.
+CREATE INDEX IF NOT EXISTS events_project_session_occurred_idx
+    ON events (project_id, session_id, occurred_at DESC)
+    WHERE deleted_at IS NULL AND session_id IS NOT NULL;
+
+-- Logged-in user slices (nullable column).
+CREATE INDEX IF NOT EXISTS events_project_user_occurred_idx
+    ON events (project_id, user_id, occurred_at DESC)
+    WHERE deleted_at IS NULL AND user_id IS NOT NULL;
+
+-- Ingest / network debugging (nullable column).
+CREATE INDEX IF NOT EXISTS events_project_ip_occurred_idx
+    ON events (project_id, ip, occurred_at DESC)
+    WHERE deleted_at IS NULL AND ip IS NOT NULL;
+
+-- User-Agent equality filters (wide values; use with project_id + time bounds in queries).
+CREATE INDEX IF NOT EXISTS events_project_user_agent_occurred_idx
+    ON events (project_id, user_agent, occurred_at DESC)
+    WHERE deleted_at IS NULL AND user_agent IS NOT NULL;
 
 -- +goose down
-DROP TRIGGER IF EXISTS update_events_updated_at ON events;
 DROP TABLE IF EXISTS events;

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -29,40 +30,114 @@ func NewEventRepository(db *pgxpool.Pool) EventRepository {
 	return &eventRepository{db: db}
 }
 
-func (r *eventRepository) Create(ctx context.Context, event *domain.Event) error {
-	query := `INSERT INTO events (name, slug, description, event_type, payload, status, created_at, updated_at)
-			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+func marshalPayload(p map[string]any) ([]byte, error) {
+	if p == nil {
+		return []byte("{}"), nil
+	}
+	return json.Marshal(p)
+}
 
-	err := r.db.QueryRow(ctx, query,
-		event.Name,
-		event.Slug,
-		event.Description,
-		event.Type,
-		event.Payload,
-		event.Status,
-		event.CreatedAt,
-		event.UpdatedAt,
-	).Scan(&event.ID)
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
+func scanEvent(row rowScanner) (*domain.Event, error) {
+	var ev domain.Event
+	var payloadBytes []byte
+	err := row.Scan(
+		&ev.ID,
+		&ev.ProjectID,
+		&ev.MessageID,
+		&ev.DistinctID,
+		&ev.UserID,
+		&ev.SessionID,
+		&ev.IP,
+		&ev.UserAgent,
+		&ev.Name,
+		&payloadBytes,
+		&ev.OccurredAt,
+		&ev.ReceivedAt,
+		&ev.DeletedAt,
+	)
 	if err != nil {
+		return nil, err
+	}
+	if len(payloadBytes) > 0 {
+		if err := json.Unmarshal(payloadBytes, &ev.Payload); err != nil {
+			return nil, fmt.Errorf("unmarshal payload: %w", err)
+		}
+	}
+	if ev.Payload == nil {
+		ev.Payload = map[string]any{}
+	}
+	return &ev, nil
+}
+
+func (r *eventRepository) Create(ctx context.Context, event *domain.Event) error {
+	payloadBytes, err := marshalPayload(event.Payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
+
+	const insert = `
+INSERT INTO events (
+  project_id, message_id, distinct_id, user_id, session_id,
+  ip, user_agent, name, payload, occurred_at, received_at
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11)
+ON CONFLICT (project_id, message_id) DO NOTHING
+RETURNING id`
+
+	err = r.db.QueryRow(ctx, insert,
+		event.ProjectID,
+		event.MessageID,
+		event.DistinctID,
+		event.UserID,
+		event.SessionID,
+		event.IP,
+		event.UserAgent,
+		event.Name,
+		payloadBytes,
+		event.OccurredAt,
+		event.ReceivedAt,
+	).Scan(&event.ID)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("failed to create event: %w", err)
 	}
 
+	const sel = `
+SELECT id, project_id, message_id, distinct_id, user_id, session_id, ip, user_agent, name, payload, occurred_at, received_at, deleted_at
+FROM events WHERE project_id = $1 AND message_id = $2 AND deleted_at IS NULL`
+
+	ev, err := scanEvent(r.db.QueryRow(ctx, sel, event.ProjectID, event.MessageID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("idempotent insert conflict but row not found: %w", err)
+		}
+		return fmt.Errorf("failed to load event after conflict: %w", err)
+	}
+	*event = *ev
 	return nil
 }
 
 func (r *eventRepository) Update(ctx context.Context, event *domain.Event) error {
-	query := `UPDATE events
-			  SET name = $1, slug = $2, description = $3, event_type = $4, payload = $5, status = $6, updated_at = NOW()
-			  WHERE id = $7 AND deleted_at IS NULL`
+	payloadBytes, err := marshalPayload(event.Payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
 
-	cmdTag, err := r.db.Exec(ctx, query,
-		event.Name,
-		event.Slug,
-		event.Description,
-		event.Type,
-		event.Payload,
-		event.Status,
+	const q = `UPDATE events
+SET name = $2, payload = $3::jsonb, user_id = $4, session_id = $5
+WHERE id = $1 AND deleted_at IS NULL`
+
+	cmdTag, err := r.db.Exec(ctx, q,
 		event.ID,
+		event.Name,
+		payloadBytes,
+		event.UserID,
+		event.SessionID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update event: %w", err)
@@ -76,22 +151,10 @@ func (r *eventRepository) Update(ctx context.Context, event *domain.Event) error
 }
 
 func (r *eventRepository) GetByID(ctx context.Context, id string) (*domain.Event, error) {
-	query := `SELECT id, name, slug, description, event_type, payload, status, created_at, updated_at, deleted_at
-			  FROM events WHERE id = $1 AND deleted_at IS NULL`
+	const q = `SELECT id, project_id, message_id, distinct_id, user_id, session_id, ip, user_agent, name, payload, occurred_at, received_at, deleted_at
+FROM events WHERE id = $1 AND deleted_at IS NULL`
 
-	var ev domain.Event
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&ev.ID,
-		&ev.Name,
-		&ev.Slug,
-		&ev.Description,
-		&ev.Type,
-		&ev.Payload,
-		&ev.Status,
-		&ev.CreatedAt,
-		&ev.UpdatedAt,
-		&ev.DeletedAt,
-	)
+	ev, err := scanEvent(r.db.QueryRow(ctx, q, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, platformError.ErrEntityNotFound
@@ -99,27 +162,15 @@ func (r *eventRepository) GetByID(ctx context.Context, id string) (*domain.Event
 		return nil, fmt.Errorf("failed to get event: %w", err)
 	}
 
-	return &ev, nil
+	return ev, nil
 }
 
 func (r *eventRepository) Delete(ctx context.Context, id string) (*domain.Event, error) {
-	query := `UPDATE events SET deleted_at = NOW()
-			  WHERE id = $1 AND deleted_at IS NULL
-			  RETURNING id, name, slug, description, event_type, payload, status, created_at, updated_at, deleted_at`
+	const q = `UPDATE events SET deleted_at = NOW()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, project_id, message_id, distinct_id, user_id, session_id, ip, user_agent, name, payload, occurred_at, received_at, deleted_at`
 
-	var ev domain.Event
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&ev.ID,
-		&ev.Name,
-		&ev.Slug,
-		&ev.Description,
-		&ev.Type,
-		&ev.Payload,
-		&ev.Status,
-		&ev.CreatedAt,
-		&ev.UpdatedAt,
-		&ev.DeletedAt,
-	)
+	ev, err := scanEvent(r.db.QueryRow(ctx, q, id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, platformError.ErrEntityNotFound
@@ -127,7 +178,7 @@ func (r *eventRepository) Delete(ctx context.Context, id string) (*domain.Event,
 		return nil, fmt.Errorf("failed to soft delete event: %w", err)
 	}
 
-	return &ev, nil
+	return ev, nil
 }
 
 func (r *eventRepository) Find(
@@ -137,15 +188,16 @@ func (r *eventRepository) Find(
 	skip int64,
 	limit int64,
 ) ([]domain.Event, error) {
-	var events []domain.Event
-	query := "SELECT id, name, slug, description, event_type, payload, status, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL"
+	query := `SELECT id, project_id, message_id, distinct_id, user_id, session_id, ip, user_agent, name, payload, occurred_at, received_at, deleted_at
+FROM events WHERE deleted_at IS NULL`
 
 	whereClauses := []string{}
 	args := []any{}
 	argCount := 1
 
 	for k, v := range filters {
-		if k == "id" {
+		switch k {
+		case "id":
 			if ids, ok := v.([]string); ok && len(ids) > 0 {
 				placeholders := make([]string, len(ids))
 				for i, id := range ids {
@@ -155,7 +207,7 @@ func (r *eventRepository) Find(
 				}
 				whereClauses = append(whereClauses, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
 			}
-		} else if k == "name" {
+		case "name":
 			if strV, ok := v.(string); ok && strings.Contains(strV, "%") {
 				whereClauses = append(whereClauses, fmt.Sprintf("name ILIKE $%d", argCount))
 				args = append(args, v)
@@ -165,7 +217,7 @@ func (r *eventRepository) Find(
 				args = append(args, v)
 				argCount++
 			}
-		} else {
+		default:
 			whereClauses = append(whereClauses, fmt.Sprintf("%s = $%d", k, argCount))
 			args = append(args, v)
 			argCount++
@@ -199,23 +251,13 @@ func (r *eventRepository) Find(
 	}
 	defer rows.Close()
 
+	var events []domain.Event
 	for rows.Next() {
-		var ev domain.Event
-		if err := rows.Scan(
-			&ev.ID,
-			&ev.Name,
-			&ev.Slug,
-			&ev.Description,
-			&ev.Type,
-			&ev.Payload,
-			&ev.Status,
-			&ev.CreatedAt,
-			&ev.UpdatedAt,
-			&ev.DeletedAt,
-		); err != nil {
+		ev, err := scanEvent(rows)
+		if err != nil {
 			return nil, err
 		}
-		events = append(events, ev)
+		events = append(events, *ev)
 	}
 
 	return events, nil
@@ -229,7 +271,8 @@ func (r *eventRepository) Count(ctx context.Context, filters map[string]any) (in
 	argCount := 1
 
 	for k, v := range filters {
-		if k == "id" {
+		switch k {
+		case "id":
 			if ids, ok := v.([]string); ok && len(ids) > 0 {
 				placeholders := make([]string, len(ids))
 				for i, id := range ids {
@@ -239,7 +282,7 @@ func (r *eventRepository) Count(ctx context.Context, filters map[string]any) (in
 				}
 				whereClauses = append(whereClauses, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
 			}
-		} else if k == "name" {
+		case "name":
 			if strV, ok := v.(string); ok && strings.Contains(strV, "%") {
 				whereClauses = append(whereClauses, fmt.Sprintf("name ILIKE $%d", argCount))
 				args = append(args, v)
@@ -249,7 +292,7 @@ func (r *eventRepository) Count(ctx context.Context, filters map[string]any) (in
 				args = append(args, v)
 				argCount++
 			}
-		} else {
+		default:
 			whereClauses = append(whereClauses, fmt.Sprintf("%s = $%d", k, argCount))
 			args = append(args, v)
 			argCount++

@@ -2,42 +2,70 @@ package dto
 
 import (
 	"time"
-
-	"github.com/Lomank123/go-service-event/pkg/client/enum"
 )
 
 type EventDTO struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Slug        string           `json:"slug"`
-	Description string           `json:"description,omitempty"`
-	Type        enum.EventType   `json:"type"`
-	Payload     string           `json:"payload"`
-	Status      enum.EventStatus `json:"status"`
-	CreatedAt   time.Time        `json:"created_at"`
-	UpdatedAt   time.Time        `json:"updated_at"`
-	DeletedAt   *time.Time       `json:"deleted_at,omitempty"`
+	// ID is the server-generated UUID for this stored row.
+	ID string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	// ProjectID scopes the event to one product or tenant (from your API key, env, or calling service).
+	ProjectID string `json:"project_id" example:"proj_live_01"`
+	// MessageID uniquely identifies this delivery; use a new UUID per HTTP request for idempotent retries.
+	MessageID string `json:"message_id" example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
+	// DistinctID is the stable analytics identity (e.g. anonymous id in localStorage) for funnels and retention.
+	DistinctID string `json:"distinct_id" example:"anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8"`
+	// UserID is your logged-in account id when available; omitted before authentication.
+	UserID *string `json:"user_id,omitempty" example:"usr_42"`
+	// SessionID groups events within one visit or tab session; optional for server-only events.
+	SessionID *string `json:"session_id,omitempty" example:"sess_01j8xyz"`
+	// IP is the client address as seen at ingest (set by the server from the HTTP request, not the JSON body).
+	IP *string `json:"ip,omitempty" example:"203.0.113.10"`
+	// UserAgent is the raw User-Agent header at ingest (set by the server).
+	UserAgent *string `json:"user_agent,omitempty" example:"Mozilla/5.0 ..."`
+	// Name is the event name / type key (e.g. page_viewed, button_clicked).
+	Name string `json:"name" example:"page_viewed"`
+	// Payload holds arbitrary JSON properties for segmentation and reporting.
+	Payload map[string]any `json:"payload"`
+	// OccurredAt is when the action happened on the client (RFC3339); may differ from server time.
+	OccurredAt time.Time `json:"occurred_at" example:"2026-04-12T10:30:00Z"`
+	// ReceivedAt is when this service persisted the event (set by the server).
+	ReceivedAt time.Time `json:"received_at" example:"2026-04-12T10:30:00.456Z"`
+	// DeletedAt is set when the row is soft-deleted.
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
+// EventCreateInputDTO is the JSON body for POST /api/v1/events/create.
+// IP and user_agent are not sent here; the server fills them from the HTTP connection.
 type EventCreateInputDTO struct {
-	Name        string           `json:"name" validate:"required,max=255"`
-	Description string           `json:"description,omitempty" validate:"omitempty,max=1024"`
-	Payload     string           `json:"payload" validate:"required"`
-	Type        enum.EventType   `json:"type" validate:"required,event_type"`
-	Status      enum.EventStatus `json:"status" validate:"required,event_status"`
+	// ProjectID identifies which product or tenant this event belongs to (from API key, config, or backend caller).
+	ProjectID string `json:"project_id" validate:"required" example:"proj_live_01"`
+	// MessageID is a new UUID per request so retries do not duplicate rows (idempotency key).
+	MessageID string `json:"message_id" validate:"required,uuid" example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
+	// DistinctID is the stable person/device id for analytics (e.g. UUID in localStorage until login).
+	DistinctID string `json:"distinct_id" validate:"required" example:"anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8"`
+	// UserID is your application’s user id when the visitor is authenticated; omit if anonymous.
+	UserID *string `json:"user_id,omitempty" example:"usr_42"`
+	// SessionID ties events to one browser session or visit; omit if not tracking sessions.
+	SessionID *string `json:"session_id,omitempty" example:"sess_01j8xyz"`
+	// Name is the event key (snake_case recommended), e.g. signup_started, purchase_completed.
+	Name string `json:"name" validate:"required,max=255" example:"page_viewed"`
+	// Payload is a JSON object of custom properties (strings, numbers, booleans) for this event.
+	Payload map[string]any `json:"payload" validate:"required"`
+	// OccurredAt is client-side event time in RFC3339 (used with server received_at for clock skew).
+	OccurredAt time.Time `json:"occurred_at" validate:"required" example:"2026-04-12T10:30:00.123Z"`
 }
 
+// EventCreateOutputDTO is returned after a successful ingest; see EventDTO for field meanings.
 type EventCreateOutputDTO struct {
+	// Event is the stored row including server id, received_at, and connection-derived ip / user_agent when present.
 	Event EventDTO `json:"event"`
 }
 
 type EventUpdateInputDTO struct {
-	ID          string           `json:"id" validate:"required,uuid"`
-	Name        string           `json:"name,omitempty" validate:"omitempty,max=255"`
-	Description string           `json:"description,omitempty" validate:"omitempty,max=1024"`
-	Payload     string           `json:"payload,omitempty" validate:"omitempty"`
-	Type        enum.EventType   `json:"type,omitempty" validate:"omitempty,event_type"`
-	Status      enum.EventStatus `json:"status,omitempty" validate:"omitempty,event_status"`
+	ID        string          `json:"id" validate:"required,uuid"`
+	Name      *string         `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Payload   *map[string]any `json:"payload,omitempty"`
+	UserID    *string         `json:"user_id,omitempty"`
+	SessionID *string         `json:"session_id,omitempty"`
 }
 
 type EventUpdateOutputDTO struct {
@@ -73,13 +101,18 @@ type EventListMetaDTO struct {
 }
 
 type EventQueryInputDTO struct {
-	IDs     []string         `json:"ids" validate:"omitempty,dive,uuid"`
-	Name    string           `json:"name" validate:"omitempty,max=255"`
-	Type    enum.EventType   `json:"type" validate:"omitempty,event_type"`
-	Status  enum.EventStatus `json:"status" validate:"omitempty,event_status"`
-	Sort    string           `json:"sort" validate:"omitempty"`
-	Page    int64            `json:"page" validate:"omitempty,min=1"`
-	Limit   int64            `json:"limit" validate:"omitempty,min=1,max=100"`
+	IDs        []string `json:"ids" validate:"omitempty,dive,uuid"`
+	ProjectID  string   `json:"project_id" validate:"omitempty"`
+	DistinctID string   `json:"distinct_id" validate:"omitempty"`
+	Name       string   `json:"name" validate:"omitempty,max=255"`
+	MessageID  string   `json:"message_id" validate:"omitempty,uuid"`
+	UserID     string   `json:"user_id" validate:"omitempty"`
+	SessionID  string   `json:"session_id" validate:"omitempty"`
+	IP         string   `json:"ip" validate:"omitempty"`
+	UserAgent  string   `json:"user_agent" validate:"omitempty"`
+	Sort       string   `json:"sort" validate:"omitempty"`
+	Page       int64    `json:"page" validate:"omitempty,min=1"`
+	Limit      int64    `json:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 type EventQueryOutputDTO struct {

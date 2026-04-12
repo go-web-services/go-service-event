@@ -2,50 +2,125 @@ basePath: /api
 definitions:
   github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO:
     properties:
-      description:
-        maxLength: 1024
+      distinct_id:
+        description: DistinctID is the stable person/device id for analytics (e.g.
+          UUID in localStorage until login).
+        example: anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8
+        type: string
+      message_id:
+        description: MessageID is a new UUID per request so retries do not duplicate
+          rows (idempotency key).
+        example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
         type: string
       name:
+        description: Name is the event key (snake_case recommended), e.g. signup_started,
+          purchase_completed.
+        example: page_viewed
         maxLength: 255
         type: string
-      payload:
+      occurred_at:
+        description: OccurredAt is client-side event time in RFC3339 (used with server
+          received_at for clock skew).
+        example: "2026-04-12T10:30:00.123Z"
         type: string
-      status:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
-      type:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+      payload:
+        additionalProperties: {}
+        description: Payload is a JSON object of custom properties (strings, numbers,
+          booleans) for this event.
+        type: object
+      project_id:
+        description: ProjectID identifies which product or tenant this event belongs
+          to (from API key, config, or backend caller).
+        example: proj_live_01
+        type: string
+      session_id:
+        description: SessionID ties events to one browser session or visit; omit if
+          not tracking sessions.
+        example: sess_01j8xyz
+        type: string
+      user_id:
+        description: UserID is your application’s user id when the visitor is authenticated;
+          omit if anonymous.
+        example: usr_42
+        type: string
     required:
+    - distinct_id
+    - message_id
     - name
+    - occurred_at
     - payload
-    - status
-    - type
+    - project_id
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO:
     properties:
       event:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        allOf:
+        - $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        description: Event is the stored row including server id, received_at, and
+          connection-derived ip / user_agent when present.
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO:
     properties:
-      created_at:
-        type: string
       deleted_at:
+        description: DeletedAt is set when the row is soft-deleted.
         type: string
-      description:
+      distinct_id:
+        description: DistinctID is the stable analytics identity (e.g. anonymous id
+          in localStorage) for funnels and retention.
+        example: anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8
         type: string
       id:
+        description: ID is the server-generated UUID for this stored row.
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      ip:
+        description: IP is the client address as seen at ingest (set by the server
+          from the HTTP request, not the JSON body).
+        example: 203.0.113.10
+        type: string
+      message_id:
+        description: MessageID uniquely identifies this delivery; use a new UUID per
+          HTTP request for idempotent retries.
+        example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
         type: string
       name:
+        description: Name is the event name / type key (e.g. page_viewed, button_clicked).
+        example: page_viewed
+        type: string
+      occurred_at:
+        description: OccurredAt is when the action happened on the client (RFC3339);
+          may differ from server time.
+        example: "2026-04-12T10:30:00Z"
         type: string
       payload:
+        additionalProperties: {}
+        description: Payload holds arbitrary JSON properties for segmentation and
+          reporting.
+        type: object
+      project_id:
+        description: ProjectID scopes the event to one product or tenant (from your
+          API key, env, or calling service).
+        example: proj_live_01
         type: string
-      slug:
+      received_at:
+        description: ReceivedAt is when this service persisted the event (set by the
+          server).
+        example: "2026-04-12T10:30:00.456Z"
         type: string
-      status:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
-      type:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
-      updated_at:
+      session_id:
+        description: SessionID groups events within one visit or tab session; optional
+          for server-only events.
+        example: sess_01j8xyz
+        type: string
+      user_agent:
+        description: UserAgent is the raw User-Agent header at ingest (set by the
+          server).
+        example: Mozilla/5.0 ...
+        type: string
+      user_id:
+        description: UserID is your logged-in account id when available; omitted before
+          authentication.
+        example: usr_42
         type: string
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO:
@@ -81,26 +156,36 @@ definitions:
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO:
     properties:
+      distinct_id:
+        type: string
       ids:
         items:
           type: string
         type: array
+      ip:
+        type: string
       limit:
         maximum: 100
         minimum: 1
         type: integer
+      message_id:
+        type: string
       name:
         maxLength: 255
         type: string
       page:
         minimum: 1
         type: integer
+      project_id:
+        type: string
+      session_id:
+        type: string
       sort:
         type: string
-      status:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
-      type:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+      user_agent:
+        type: string
+      user_id:
+        type: string
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO:
     properties:
@@ -113,20 +198,19 @@ definitions:
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO:
     properties:
-      description:
-        maxLength: 1024
-        type: string
       id:
         type: string
       name:
         maxLength: 255
+        minLength: 1
         type: string
       payload:
+        additionalProperties: {}
+        type: object
+      session_id:
         type: string
-      status:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus'
-      type:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_enum.EventType'
+      user_id:
+        type: string
     required:
     - id
     type: object
@@ -146,26 +230,6 @@ definitions:
       total_pages:
         type: integer
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_enum.EventStatus:
-    enum:
-    - pending
-    - processed
-    - failed
-    type: string
-    x-enum-varnames:
-    - EventStatusPending
-    - EventStatusProcessed
-    - EventStatusFailed
-  github_com_Lomank123_go-service-event_pkg_client_enum.EventType:
-    enum:
-    - user
-    - system
-    - webhook
-    type: string
-    x-enum-varnames:
-    - EventTypeUser
-    - EventTypeSystem
-    - EventTypeWebhook
 info:
   contact: {}
   title: Event Service API
@@ -175,8 +239,11 @@ paths:
     post:
       consumes:
       - application/json
+      description: Accepts EventCreateInputDTO. Same project_id + message_id on retry
+        returns the existing event (idempotent). ip and user_agent are not sent in
+        JSON; the server sets them from the HTTP request.
       parameters:
-      - description: Create Event Request
+      - description: Event payload (see model for per-field descriptions)
         in: body
         name: input
         required: true
@@ -189,7 +256,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO'
-      summary: Create new event
+      summary: Ingest analytics event
       tags:
       - Events
   /v1/events/delete:

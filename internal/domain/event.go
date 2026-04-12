@@ -2,19 +2,41 @@ package domain
 
 import (
 	"time"
-
-	"github.com/Lomank123/go-service-event/pkg/client/enum"
 )
 
+// Event is a single ingested analytics occurrence.
 type Event struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Slug        string           `json:"slug"`
-	Description string           `json:"description,omitempty"`
-	Type        enum.EventType   `json:"type"`
-	Payload     string           `json:"payload"`
-	Status      enum.EventStatus `json:"status"`
-	CreatedAt   time.Time        `json:"created_at"`
-	UpdatedAt   time.Time        `json:"updated_at"`
-	DeletedAt   *time.Time       `json:"deleted_at,omitempty"`
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+
+	// Payload is the arbitrary JSON payload for segmentation; set by the emitter with event-specific keys.
+	Payload map[string]any `json:"payload"`
+
+	// ProjectID scopes the event to one product/tenant. Usually derived from the API key or token at ingest,
+	// or sent by a calling backend; not typically a raw user-typed value from the browser.
+	ProjectID string `json:"project_id"`
+	// MessageID uniquely identifies this delivery for idempotency. Set by the client (FE or service) per send
+	// (e.g. UUID) so retries do not create duplicate rows.
+	MessageID string `json:"message_id"`
+	// DistinctID is the stable analytics identity for a person/device (e.g. anonymous UUID in localStorage).
+	// Set by the client on first visit and reused until identify/login changes how you merge identity.
+	DistinctID string `json:"distinct_id"`
+	// UserID is your authenticated account id when the user is logged in; set by the client from auth state
+	// or omitted until you have authentication. Used with distinct_id for identity after signup.
+	UserID *string `json:"user_id,omitempty"`
+	// SessionID groups events within one visit or tab session. Typically set by the FE (new id per session);
+	// optional for server-only or non-session analytics.
+	SessionID *string `json:"session_id,omitempty"`
+
+	// IP is the client address as seen at ingest (e.g. RemoteAddr or first trusted X-Forwarded-For / X-Real-IP).
+	// Set by the HTTP handler or proxy-aware middleware, not the event JSON body; omit for non-HTTP sources.
+	IP *string `json:"ip,omitempty"`
+	// UserAgent is the raw User-Agent request header at ingest. Set by the HTTP layer alongside IP; optional.
+	UserAgent *string `json:"user_agent,omitempty"`
+
+	// OccurredAt is when the action happened on the client or source system; set by the sender (may skew vs server time).
+	OccurredAt time.Time `json:"occurred_at"`
+	// ReceivedAt is when the ingest service accepted and stored the event; set by the server at write time.
+	ReceivedAt time.Time `json:"received_at"`
 }

@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Lomank123/go-service-event/internal/domain"
 	"github.com/Lomank123/go-service-event/internal/service"
 	"github.com/Lomank123/go-service-event/internal/types"
 	"github.com/Lomank123/go-service-event/pkg/client/dto"
-	clientValidator "github.com/Lomank123/go-service-event/pkg/client/validator"
 	platformError "github.com/Lomank123/go-web-platform/error"
 	"github.com/Lomank123/go-web-platform/logger"
 	platformTypes "github.com/Lomank123/go-web-platform/types"
@@ -22,23 +22,38 @@ type EventHandler struct {
 }
 
 func NewEventHandler(log logger.Logger, svc service.EventService) *EventHandler {
-	v := validator.New()
-	_ = v.RegisterValidation("event_type", clientValidator.ValidateEventType)
-	_ = v.RegisterValidation("event_status", clientValidator.ValidateEventStatus)
-
 	return &EventHandler{
 		log:      log,
 		svc:      svc,
-		validate: v,
+		validate: validator.New(),
+	}
+}
+
+func eventToDTO(ev domain.Event) dto.EventDTO {
+	return dto.EventDTO{
+		ID:         ev.ID,
+		ProjectID:  ev.ProjectID,
+		MessageID:  ev.MessageID,
+		DistinctID: ev.DistinctID,
+		UserID:     ev.UserID,
+		SessionID:  ev.SessionID,
+		IP:         ev.IP,
+		UserAgent:  ev.UserAgent,
+		Name:       ev.Name,
+		Payload:    ev.Payload,
+		OccurredAt: ev.OccurredAt,
+		ReceivedAt: ev.ReceivedAt,
+		DeletedAt:  ev.DeletedAt,
 	}
 }
 
 // CreateV1
-// @Summary Create new event
+// @Summary Ingest analytics event
+// @Description Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are not sent in JSON; the server sets them from the HTTP request.
 // @Tags Events
 // @Accept json
 // @Produce json
-// @Param input body dto.EventCreateInputDTO true "Create Event Request"
+// @Param input body dto.EventCreateInputDTO true "Event payload (see model for per-field descriptions)"
 // @Success 200 {object} dto.EventCreateOutputDTO
 // @Router /v1/events/create [post]
 func (h *EventHandler) CreateV1(c *gin.Context) {
@@ -53,33 +68,30 @@ func (h *EventHandler) CreateV1(c *gin.Context) {
 		return
 	}
 
-	ev, err := h.svc.Create(
-		c.Request.Context(),
-		input.Name,
-		input.Description,
-		input.Payload,
-		input.Type,
-		input.Status,
-	)
+	ev := &domain.Event{
+		ProjectID:  input.ProjectID,
+		MessageID:  input.MessageID,
+		DistinctID: input.DistinctID,
+		UserID:     input.UserID,
+		SessionID:  input.SessionID,
+		Name:       strings.TrimSpace(input.Name),
+		Payload:    input.Payload,
+		OccurredAt: input.OccurredAt,
+	}
+	if ip := c.ClientIP(); ip != "" {
+		ev.IP = &ip
+	}
+	if ua := c.Request.UserAgent(); ua != "" {
+		ev.UserAgent = &ua
+	}
+
+	out, err := h.svc.Create(c.Request.Context(), ev)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.EventCreateOutputDTO{
-		Event: dto.EventDTO{
-			ID:          ev.ID,
-			Name:        ev.Name,
-			Slug:        ev.Slug,
-			Description: ev.Description,
-			Type:        ev.Type,
-			Payload:     ev.Payload,
-			Status:      ev.Status,
-			CreatedAt:   ev.CreatedAt,
-			UpdatedAt:   ev.UpdatedAt,
-			DeletedAt:   ev.DeletedAt,
-		},
-	})
+	c.JSON(http.StatusOK, dto.EventCreateOutputDTO{Event: eventToDTO(*out)})
 }
 
 // UpdateV1
@@ -106,30 +118,16 @@ func (h *EventHandler) UpdateV1(c *gin.Context) {
 		c.Request.Context(),
 		input.ID,
 		input.Name,
-		input.Description,
 		input.Payload,
-		input.Type,
-		input.Status,
+		input.UserID,
+		input.SessionID,
 	)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.EventUpdateOutputDTO{
-		Event: dto.EventDTO{
-			ID:          ev.ID,
-			Name:        ev.Name,
-			Slug:        ev.Slug,
-			Description: ev.Description,
-			Type:        ev.Type,
-			Payload:     ev.Payload,
-			Status:      ev.Status,
-			CreatedAt:   ev.CreatedAt,
-			UpdatedAt:   ev.UpdatedAt,
-			DeletedAt:   ev.DeletedAt,
-		},
-	})
+	c.JSON(http.StatusOK, dto.EventUpdateOutputDTO{Event: eventToDTO(*ev)})
 }
 
 // DeleteV1
@@ -160,18 +158,7 @@ func (h *EventHandler) DeleteV1(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dto.EventDeleteOutputDTO{
 		Message: "Event deleted successfully",
-		Event: dto.EventDTO{
-			ID:          ev.ID,
-			Name:        ev.Name,
-			Slug:        ev.Slug,
-			Description: ev.Description,
-			Type:        ev.Type,
-			Payload:     ev.Payload,
-			Status:      ev.Status,
-			CreatedAt:   ev.CreatedAt,
-			UpdatedAt:   ev.UpdatedAt,
-			DeletedAt:   ev.DeletedAt,
-		},
+		Event:   eventToDTO(*ev),
 	})
 }
 
@@ -201,20 +188,7 @@ func (h *EventHandler) DetailV1(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.EventDetailOutputDTO{
-		Event: dto.EventDTO{
-			ID:          ev.ID,
-			Name:        ev.Name,
-			Slug:        ev.Slug,
-			Description: ev.Description,
-			Type:        ev.Type,
-			Payload:     ev.Payload,
-			Status:      ev.Status,
-			CreatedAt:   ev.CreatedAt,
-			UpdatedAt:   ev.UpdatedAt,
-			DeletedAt:   ev.DeletedAt,
-		},
-	})
+	c.JSON(http.StatusOK, dto.EventDetailOutputDTO{Event: eventToDTO(*ev)})
 }
 
 // QueryV1
@@ -241,24 +215,38 @@ func (h *EventHandler) QueryV1(c *gin.Context) {
 	if len(input.IDs) > 0 {
 		filters.IDs = input.IDs
 	}
+	if input.ProjectID != "" {
+		filters.ProjectID = &input.ProjectID
+	}
+	if input.DistinctID != "" {
+		filters.DistinctID = &input.DistinctID
+	}
 	if input.Name != "" {
 		filters.Name = &input.Name
 	}
-	if input.Type != "" {
-		filters.Type = &input.Type
+	if input.MessageID != "" {
+		filters.MessageID = &input.MessageID
 	}
-	if input.Status != "" {
-		filters.Status = &input.Status
+	if input.UserID != "" {
+		filters.UserID = &input.UserID
+	}
+	if input.SessionID != "" {
+		filters.SessionID = &input.SessionID
+	}
+	if input.IP != "" {
+		filters.IP = &input.IP
+	}
+	if input.UserAgent != "" {
+		filters.UserAgent = &input.UserAgent
 	}
 
-	var sort []string
+	sort := []string{"-occurred_at"}
 	if input.Sort != "" {
 		sort = strings.Split(input.Sort, ",")
 	}
 
-	var limit int64 = 20
-	var page int64 = 1
-
+	limit := int64(20)
+	page := int64(1)
 	if input.Limit != 0 {
 		limit = input.Limit
 	}
@@ -277,20 +265,9 @@ func (h *EventHandler) QueryV1(c *gin.Context) {
 		return
 	}
 
-	var result []dto.EventDTO
+	result := make([]dto.EventDTO, 0, len(events))
 	for _, ev := range events {
-		result = append(result, dto.EventDTO{
-			ID:          ev.ID,
-			Name:        ev.Name,
-			Slug:        ev.Slug,
-			Description: ev.Description,
-			Type:        ev.Type,
-			Payload:     ev.Payload,
-			Status:      ev.Status,
-			CreatedAt:   ev.CreatedAt,
-			UpdatedAt:   ev.UpdatedAt,
-			DeletedAt:   ev.DeletedAt,
-		})
+		result = append(result, eventToDTO(ev))
 	}
 
 	c.JSON(http.StatusOK, dto.EventQueryOutputDTO{
