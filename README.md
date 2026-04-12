@@ -1,6 +1,6 @@
 # go-service-event
 
-HTTP API and `pkg/client` module for domain events (CRUD, query, pagination). Built like `lmk-service-website`: Gin, PostgreSQL (pgx), goose migrations, Docker, Swagger.
+HTTP API and `pkg/client` module for domain events (CRUD, query, pagination).
 
 ## Run locally
 

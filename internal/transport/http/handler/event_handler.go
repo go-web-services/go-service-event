@@ -50,7 +50,7 @@ func eventToDTO(ev domain.Event) dto.EventDTO {
 
 // CreateV1
 // @Summary Ingest analytics event
-// @Description Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are not sent in JSON; the server sets them from the HTTP request.
+// @Description Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are optional fields on the JSON body.
 // @Tags Events
 // @Accept json
 // @Produce json
@@ -75,15 +75,11 @@ func (h *EventHandler) CreateV1(c *gin.Context) {
 		DistinctID: input.DistinctID,
 		UserID:     input.UserID,
 		SessionID:  input.SessionID,
+		IP:         input.IP,
+		UserAgent:  input.UserAgent,
 		Name:       strings.TrimSpace(input.Name),
 		Payload:    input.Payload,
 		OccurredAt: input.OccurredAt,
-	}
-	if ip := c.ClientIP(); ip != "" {
-		ev.IP = &ip
-	}
-	if ua := c.Request.UserAgent(); ua != "" {
-		ev.UserAgent = &ua
 	}
 
 	out, err := h.svc.Create(c.Request.Context(), ev)
@@ -97,7 +93,7 @@ func (h *EventHandler) CreateV1(c *gin.Context) {
 
 // CreateBatchV1
 // @Summary Ingest multiple analytics events (atomic batch)
-// @Description Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. ip and user_agent apply to every item from the HTTP request.
+// @Description Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. Each item may include ip and user_agent on the JSON body.
 // @Tags Events
 // @Accept json
 // @Produce json
@@ -116,14 +112,6 @@ func (h *EventHandler) CreateBatchV1(c *gin.Context) {
 		return
 	}
 
-	var ipPtr, uaPtr *string
-	if ip := c.ClientIP(); ip != "" {
-		ipPtr = &ip
-	}
-	if ua := c.Request.UserAgent(); ua != "" {
-		uaPtr = &ua
-	}
-
 	events := make([]*domain.Event, 0, len(input.Events))
 	for i := range input.Events {
 		in := &input.Events[i]
@@ -133,11 +121,11 @@ func (h *EventHandler) CreateBatchV1(c *gin.Context) {
 			DistinctID: in.DistinctID,
 			UserID:     in.UserID,
 			SessionID:  in.SessionID,
+			IP:         in.IP,
+			UserAgent:  in.UserAgent,
 			Name:       strings.TrimSpace(in.Name),
 			Payload:    in.Payload,
 			OccurredAt: in.OccurredAt,
-			IP:         ipPtr,
-			UserAgent:  uaPtr,
 		})
 	}
 
@@ -257,6 +245,7 @@ func (h *EventHandler) DetailV1(c *gin.Context) {
 
 // QueryV1
 // @Summary Returns list of events by query
+// @Description Filters: all list fields use OR within the field (SQL IN, or ILIKE OR for names). names are substring terms; ips and user_agents are exact. Combined with AND across different fields.
 // @Tags Events
 // @Accept json
 // @Produce json
@@ -279,29 +268,29 @@ func (h *EventHandler) QueryV1(c *gin.Context) {
 	if len(input.IDs) > 0 {
 		filters.IDs = input.IDs
 	}
-	if input.ProjectID != "" {
-		filters.ProjectID = &input.ProjectID
+	if len(input.ProjectIDs) > 0 {
+		filters.ProjectIDs = input.ProjectIDs
 	}
-	if input.DistinctID != "" {
-		filters.DistinctID = &input.DistinctID
+	if len(input.DistinctIDs) > 0 {
+		filters.DistinctIDs = input.DistinctIDs
 	}
-	if input.Name != "" {
-		filters.Name = &input.Name
+	if len(input.Names) > 0 {
+		filters.Names = input.Names
 	}
-	if input.MessageID != "" {
-		filters.MessageID = &input.MessageID
+	if len(input.MessageIDs) > 0 {
+		filters.MessageIDs = input.MessageIDs
 	}
-	if input.UserID != "" {
-		filters.UserID = &input.UserID
+	if len(input.UserIDs) > 0 {
+		filters.UserIDs = input.UserIDs
 	}
-	if input.SessionID != "" {
-		filters.SessionID = &input.SessionID
+	if len(input.SessionIDs) > 0 {
+		filters.SessionIDs = input.SessionIDs
 	}
-	if input.IP != "" {
-		filters.IP = &input.IP
+	if len(input.IPs) > 0 {
+		filters.IPs = input.IPs
 	}
-	if input.UserAgent != "" {
-		filters.UserAgent = &input.UserAgent
+	if len(input.UserAgents) > 0 {
+		filters.UserAgents = input.UserAgents
 	}
 
 	sort := []string{"-occurred_at"}

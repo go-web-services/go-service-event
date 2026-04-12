@@ -146,29 +146,33 @@ func (s *eventService) Query(
 	if len(filter.IDs) > 0 {
 		filters["id"] = filter.IDs
 	}
-	if filter.ProjectID != nil {
-		filters["project_id"] = *filter.ProjectID
+	if len(filter.ProjectIDs) > 0 {
+		filters["project_id"] = filter.ProjectIDs
 	}
-	if filter.DistinctID != nil {
-		filters["distinct_id"] = *filter.DistinctID
+	if len(filter.DistinctIDs) > 0 {
+		filters["distinct_id"] = filter.DistinctIDs
 	}
-	if filter.Name != nil {
-		filters["name"] = fmt.Sprintf("%%%s%%", *filter.Name)
+	if len(filter.Names) > 0 {
+		namePatterns := make([]string, len(filter.Names))
+		for i, n := range filter.Names {
+			namePatterns[i] = fmt.Sprintf("%%%s%%", n)
+		}
+		filters["name"] = namePatterns
 	}
-	if filter.MessageID != nil {
-		filters["message_id"] = *filter.MessageID
+	if len(filter.MessageIDs) > 0 {
+		filters["message_id"] = filter.MessageIDs
 	}
-	if filter.UserID != nil {
-		filters["user_id"] = *filter.UserID
+	if len(filter.UserIDs) > 0 {
+		filters["user_id"] = filter.UserIDs
 	}
-	if filter.SessionID != nil {
-		filters["session_id"] = *filter.SessionID
+	if len(filter.SessionIDs) > 0 {
+		filters["session_id"] = filter.SessionIDs
 	}
-	if filter.IP != nil {
-		filters["ip"] = *filter.IP
+	if len(filter.IPs) > 0 {
+		filters["ip"] = filter.IPs
 	}
-	if filter.UserAgent != nil {
-		filters["user_agent"] = *filter.UserAgent
+	if len(filter.UserAgents) > 0 {
+		filters["user_agent"] = filter.UserAgents
 	}
 
 	count, err := s.repo.Count(ctx, filters)

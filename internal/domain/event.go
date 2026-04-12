@@ -29,10 +29,9 @@ type Event struct {
 	// optional for server-only or non-session analytics.
 	SessionID *string `json:"session_id,omitempty"`
 
-	// IP is the client address as seen at ingest (e.g. RemoteAddr or first trusted X-Forwarded-For / X-Real-IP).
-	// Set by the HTTP handler or proxy-aware middleware, not the event JSON body; omit for non-HTTP sources.
+	// IP is the client address for this event (e.g. from your edge, gateway, or client-reported); optional.
 	IP *string `json:"ip,omitempty"`
-	// UserAgent is the raw User-Agent request header at ingest. Set by the HTTP layer alongside IP; optional.
+	// UserAgent is the raw user-agent string for this event; optional.
 	UserAgent *string `json:"user_agent,omitempty"`
 
 	// OccurredAt is when the action happened on the client or source system; set by the sender (may skew vs server time).

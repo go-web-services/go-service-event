@@ -17,9 +17,9 @@ type EventDTO struct {
 	UserID *string `json:"user_id,omitempty" example:"usr_42"`
 	// SessionID groups events within one visit or tab session; optional for server-only events.
 	SessionID *string `json:"session_id,omitempty" example:"sess_01j8xyz"`
-	// IP is the client address as seen at ingest (set by the server from the HTTP request, not the JSON body).
+	// IP is the client address stored with the event (caller-supplied, e.g. from edge or client).
 	IP *string `json:"ip,omitempty" example:"203.0.113.10"`
-	// UserAgent is the raw User-Agent header at ingest (set by the server).
+	// UserAgent is the raw user-agent string stored with the event (caller-supplied).
 	UserAgent *string `json:"user_agent,omitempty" example:"Mozilla/5.0 ..."`
 	// Name is the event name / type key (e.g. page_viewed, button_clicked).
 	Name string `json:"name" example:"page_viewed"`
@@ -34,7 +34,6 @@ type EventDTO struct {
 }
 
 // EventCreateInputDTO is the JSON body for POST /api/v1/events/create.
-// IP and user_agent are not sent here; the server fills them from the HTTP connection.
 type EventCreateInputDTO struct {
 	// ProjectID identifies which product or tenant this event belongs to (from API key, config, or backend caller).
 	ProjectID string `json:"project_id" validate:"required" example:"proj_live_01"`
@@ -46,6 +45,10 @@ type EventCreateInputDTO struct {
 	UserID *string `json:"user_id,omitempty" example:"usr_42"`
 	// SessionID ties events to one browser session or visit; omit if not tracking sessions.
 	SessionID *string `json:"session_id,omitempty" example:"sess_01j8xyz"`
+	// IP is the client IP for this event (e.g. from your API gateway or client); omit if unknown.
+	IP *string `json:"ip,omitempty" example:"203.0.113.10"`
+	// UserAgent is the raw user-agent for this event; omit if unknown.
+	UserAgent *string `json:"user_agent,omitempty" example:"Mozilla/5.0 (compatible; ...)"`
 	// Name is the event key (snake_case recommended), e.g. signup_started, purchase_completed.
 	Name string `json:"name" validate:"required,max=255" example:"page_viewed"`
 	// Payload is a JSON object of custom properties (strings, numbers, booleans) for this event.
@@ -56,13 +59,12 @@ type EventCreateInputDTO struct {
 
 // EventCreateOutputDTO is returned after a successful ingest; see EventDTO for field meanings.
 type EventCreateOutputDTO struct {
-	// Event is the stored row including server id, received_at, and connection-derived ip / user_agent when present.
+	// Event is the stored row including server id, received_at, and request-provided ip / user_agent when present.
 	Event EventDTO `json:"event"`
 }
 
 // EventCreateBatchInputDTO is the JSON body for POST /api/v1/events/create-batch.
 // Each item follows EventCreateInputDTO rules; message_id values must be unique within the batch (and across idempotent retries).
-// ip and user_agent are applied from the HTTP request to every event in the batch.
 type EventCreateBatchInputDTO struct {
 	// Events is the list of events to ingest in one atomic transaction (max 100).
 	Events []EventCreateInputDTO `json:"events" validate:"required,min=1,max=100,dive"`
@@ -113,16 +115,26 @@ type EventListMetaDTO struct {
 	Pagination PaginationOutputParams `json:"pagination"`
 }
 
+// EventQueryInputDTO filters events; omit a field to not filter by it. List fields use OR within the same field (SQL IN, or ILIKE OR for names); combined with AND across different fields.
 type EventQueryInputDTO struct {
-	IDs        []string `json:"ids" validate:"omitempty,dive,uuid"`
-	ProjectID  string   `json:"project_id" validate:"omitempty"`
-	DistinctID string   `json:"distinct_id" validate:"omitempty"`
-	Name       string   `json:"name" validate:"omitempty,max=255"`
-	MessageID  string   `json:"message_id" validate:"omitempty,uuid"`
-	UserID     string   `json:"user_id" validate:"omitempty"`
-	SessionID  string   `json:"session_id" validate:"omitempty"`
-	IP         string   `json:"ip" validate:"omitempty"`
-	UserAgent  string   `json:"user_agent" validate:"omitempty"`
+	// IDs filters by event row UUIDs.
+	IDs []string `json:"ids" validate:"omitempty,dive,uuid"`
+	// ProjectIDs matches any listed project_id.
+	ProjectIDs []string `json:"project_ids" validate:"omitempty,dive"`
+	// DistinctIDs matches any listed distinct_id.
+	DistinctIDs []string `json:"distinct_ids" validate:"omitempty,dive"`
+	// Names matches if event name matches any term (substring ILIKE per term).
+	Names []string `json:"names" validate:"omitempty,dive,max=255"`
+	// MessageIDs matches any listed message_id (UUID each).
+	MessageIDs []string `json:"message_ids" validate:"omitempty,dive,uuid"`
+	// UserIDs matches any listed user_id.
+	UserIDs []string `json:"user_ids" validate:"omitempty,dive"`
+	// SessionIDs matches any listed session_id.
+	SessionIDs []string `json:"session_ids" validate:"omitempty,dive"`
+	// IPs matches any listed ip (exact).
+	IPs []string `json:"ips" validate:"omitempty,dive"`
+	// UserAgents matches any listed user_agent (exact).
+	UserAgents []string `json:"user_agents" validate:"omitempty,dive"`
 	Sort       string   `json:"sort" validate:"omitempty"`
 	Page       int64    `json:"page" validate:"omitempty,min=1"`
 	Limit      int64    `json:"limit" validate:"omitempty,min=1,max=100"`

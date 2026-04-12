@@ -231,7 +231,7 @@ FROM events WHERE deleted_at IS NULL`
 
 	for k, v := range filters {
 		switch k {
-		case "id":
+		case "id", "project_id", "distinct_id", "message_id", "user_id", "session_id", "ip", "user_agent":
 			if ids, ok := v.([]string); ok && len(ids) > 0 {
 				placeholders := make([]string, len(ids))
 				for i, id := range ids {
@@ -239,17 +239,21 @@ FROM events WHERE deleted_at IS NULL`
 					args = append(args, id)
 					argCount++
 				}
-				whereClauses = append(whereClauses, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
+				whereClauses = append(whereClauses, fmt.Sprintf("%s IN (%s)", k, strings.Join(placeholders, ",")))
 			}
 		case "name":
-			if strV, ok := v.(string); ok && strings.Contains(strV, "%") {
-				whereClauses = append(whereClauses, fmt.Sprintf("name ILIKE $%d", argCount))
-				args = append(args, v)
-				argCount++
-			} else {
-				whereClauses = append(whereClauses, fmt.Sprintf("name = $%d", argCount))
-				args = append(args, v)
-				argCount++
+			if names, ok := v.([]string); ok && len(names) > 0 {
+				ors := make([]string, 0, len(names))
+				for _, n := range names {
+					if strings.Contains(n, "%") {
+						ors = append(ors, fmt.Sprintf("name ILIKE $%d", argCount))
+					} else {
+						ors = append(ors, fmt.Sprintf("name = $%d", argCount))
+					}
+					args = append(args, n)
+					argCount++
+				}
+				whereClauses = append(whereClauses, "("+strings.Join(ors, " OR ")+")")
 			}
 		default:
 			whereClauses = append(whereClauses, fmt.Sprintf("%s = $%d", k, argCount))
@@ -306,7 +310,7 @@ func (r *eventRepository) Count(ctx context.Context, filters map[string]any) (in
 
 	for k, v := range filters {
 		switch k {
-		case "id":
+		case "id", "project_id", "distinct_id", "message_id", "user_id", "session_id", "ip", "user_agent":
 			if ids, ok := v.([]string); ok && len(ids) > 0 {
 				placeholders := make([]string, len(ids))
 				for i, id := range ids {
@@ -314,17 +318,21 @@ func (r *eventRepository) Count(ctx context.Context, filters map[string]any) (in
 					args = append(args, id)
 					argCount++
 				}
-				whereClauses = append(whereClauses, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
+				whereClauses = append(whereClauses, fmt.Sprintf("%s IN (%s)", k, strings.Join(placeholders, ",")))
 			}
 		case "name":
-			if strV, ok := v.(string); ok && strings.Contains(strV, "%") {
-				whereClauses = append(whereClauses, fmt.Sprintf("name ILIKE $%d", argCount))
-				args = append(args, v)
-				argCount++
-			} else {
-				whereClauses = append(whereClauses, fmt.Sprintf("name = $%d", argCount))
-				args = append(args, v)
-				argCount++
+			if names, ok := v.([]string); ok && len(names) > 0 {
+				ors := make([]string, 0, len(names))
+				for _, n := range names {
+					if strings.Contains(n, "%") {
+						ors = append(ors, fmt.Sprintf("name ILIKE $%d", argCount))
+					} else {
+						ors = append(ors, fmt.Sprintf("name = $%d", argCount))
+					}
+					args = append(args, n)
+					argCount++
+				}
+				whereClauses = append(whereClauses, "("+strings.Join(ors, " OR ")+")")
 			}
 		default:
 			whereClauses = append(whereClauses, fmt.Sprintf("%s = $%d", k, argCount))

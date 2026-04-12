@@ -27,6 +27,11 @@ definitions:
           UUID in localStorage until login).
         example: anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8
         type: string
+      ip:
+        description: IP is the client IP for this event (e.g. from your API gateway
+          or client); omit if unknown.
+        example: 203.0.113.10
+        type: string
       message_id:
         description: MessageID is a new UUID per request so retries do not duplicate
           rows (idempotency key).
@@ -58,6 +63,10 @@ definitions:
           not tracking sessions.
         example: sess_01j8xyz
         type: string
+      user_agent:
+        description: UserAgent is the raw user-agent for this event; omit if unknown.
+        example: Mozilla/5.0 (compatible; ...)
+        type: string
       user_id:
         description: UserID is your application’s user id when the visitor is authenticated;
           omit if anonymous.
@@ -77,7 +86,7 @@ definitions:
         allOf:
         - $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
         description: Event is the stored row including server id, received_at, and
-          connection-derived ip / user_agent when present.
+          request-provided ip / user_agent when present.
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO:
     properties:
@@ -94,8 +103,8 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
       ip:
-        description: IP is the client address as seen at ingest (set by the server
-          from the HTTP request, not the JSON body).
+        description: IP is the client address stored with the event (caller-supplied,
+          e.g. from edge or client).
         example: 203.0.113.10
         type: string
       message_id:
@@ -133,8 +142,8 @@ definitions:
         example: sess_01j8xyz
         type: string
       user_agent:
-        description: UserAgent is the raw User-Agent header at ingest (set by the
-          server).
+        description: UserAgent is the raw user-agent string stored with the event
+          (caller-supplied).
         example: Mozilla/5.0 ...
         type: string
       user_id:
@@ -176,36 +185,61 @@ definitions:
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO:
     properties:
-      distinct_id:
-        type: string
-      ids:
+      distinct_ids:
+        description: DistinctIDs matches any listed distinct_id.
         items:
           type: string
         type: array
-      ip:
-        type: string
+      ids:
+        description: IDs filters by event row UUIDs.
+        items:
+          type: string
+        type: array
+      ips:
+        description: IPs matches any listed ip (exact).
+        items:
+          type: string
+        type: array
       limit:
         maximum: 100
         minimum: 1
         type: integer
-      message_id:
-        type: string
-      name:
-        maxLength: 255
-        type: string
+      message_ids:
+        description: MessageIDs matches any listed message_id (UUID each).
+        items:
+          type: string
+        type: array
+      names:
+        description: Names matches if event name matches any term (substring ILIKE
+          per term).
+        items:
+          type: string
+        type: array
       page:
         minimum: 1
         type: integer
-      project_id:
-        type: string
-      session_id:
-        type: string
+      project_ids:
+        description: ProjectIDs matches any listed project_id.
+        items:
+          type: string
+        type: array
+      session_ids:
+        description: SessionIDs matches any listed session_id.
+        items:
+          type: string
+        type: array
       sort:
         type: string
-      user_agent:
-        type: string
-      user_id:
-        type: string
+      user_agents:
+        description: UserAgents matches any listed user_agent (exact).
+        items:
+          type: string
+        type: array
+      user_ids:
+        description: UserIDs matches any listed user_id.
+        items:
+          type: string
+        type: array
     type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO:
     properties:
@@ -260,8 +294,8 @@ paths:
       consumes:
       - application/json
       description: Accepts EventCreateInputDTO. Same project_id + message_id on retry
-        returns the existing event (idempotent). ip and user_agent are not sent in
-        JSON; the server sets them from the HTTP request.
+        returns the existing event (idempotent). ip and user_agent are optional fields
+        on the JSON body.
       parameters:
       - description: Event payload (see model for per-field descriptions)
         in: body
@@ -285,8 +319,8 @@ paths:
       - application/json
       description: Accepts EventCreateBatchInputDTO. All rows are inserted in one
         transaction. Same rules as single create; duplicate project_id+message_id
-        within the request body is rejected. ip and user_agent apply to every item
-        from the HTTP request.
+        within the request body is rejected. Each item may include ip and user_agent
+        on the JSON body.
       parameters:
       - description: Batch payload
         in: body
@@ -350,6 +384,9 @@ paths:
     post:
       consumes:
       - application/json
+      description: 'Filters: all list fields use OR within the field (SQL IN, or ILIKE
+        OR for names). names are substring terms; ips and user_agents are exact. Combined
+        with AND across different fields.'
       parameters:
       - description: Query parameters
         in: body

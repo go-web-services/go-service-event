@@ -9,7 +9,7 @@
     "paths": {
         "/v1/events/create": {
             "post": {
-                "description": "Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are not sent in JSON; the server sets them from the HTTP request.",
+                "description": "Accepts EventCreateInputDTO. Same project_id + message_id on retry returns the existing event (idempotent). ip and user_agent are optional fields on the JSON body.",
                 "consumes": [
                     "application/json"
                 ],
@@ -43,7 +43,7 @@
         },
         "/v1/events/create-batch": {
             "post": {
-                "description": "Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. ip and user_agent apply to every item from the HTTP request.",
+                "description": "Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. Each item may include ip and user_agent on the JSON body.",
                 "consumes": [
                     "application/json"
                 ],
@@ -143,6 +143,7 @@
         },
         "/v1/events/query": {
             "post": {
+                "description": "Filters: all list fields use OR within the field (SQL IN, or ILIKE OR for names). names are substring terms; ips and user_agents are exact. Combined with AND across different fields.",
                 "consumes": [
                     "application/json"
                 ],
@@ -253,6 +254,11 @@
                     "type": "string",
                     "example": "anon_6ba7b810-9dad-11d1-80b4-00c04fd430c8"
                 },
+                "ip": {
+                    "description": "IP is the client IP for this event (e.g. from your API gateway or client); omit if unknown.",
+                    "type": "string",
+                    "example": "203.0.113.10"
+                },
                 "message_id": {
                     "description": "MessageID is a new UUID per request so retries do not duplicate rows (idempotency key).",
                     "type": "string",
@@ -284,6 +290,11 @@
                     "type": "string",
                     "example": "sess_01j8xyz"
                 },
+                "user_agent": {
+                    "description": "UserAgent is the raw user-agent for this event; omit if unknown.",
+                    "type": "string",
+                    "example": "Mozilla/5.0 (compatible; ...)"
+                },
                 "user_id": {
                     "description": "UserID is your application’s user id when the visitor is authenticated; omit if anonymous.",
                     "type": "string",
@@ -295,7 +306,7 @@
             "type": "object",
             "properties": {
                 "event": {
-                    "description": "Event is the stored row including server id, received_at, and connection-derived ip / user_agent when present.",
+                    "description": "Event is the stored row including server id, received_at, and request-provided ip / user_agent when present.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
@@ -322,7 +333,7 @@
                     "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "ip": {
-                    "description": "IP is the client address as seen at ingest (set by the server from the HTTP request, not the JSON body).",
+                    "description": "IP is the client address stored with the event (caller-supplied, e.g. from edge or client).",
                     "type": "string",
                     "example": "203.0.113.10"
                 },
@@ -362,7 +373,7 @@
                     "example": "sess_01j8xyz"
                 },
                 "user_agent": {
-                    "description": "UserAgent is the raw User-Agent header at ingest (set by the server).",
+                    "description": "UserAgent is the raw user-agent string stored with the event (caller-supplied).",
                     "type": "string",
                     "example": "Mozilla/5.0 ..."
                 },
@@ -425,48 +436,80 @@
         "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO": {
             "type": "object",
             "properties": {
-                "distinct_id": {
-                    "type": "string"
-                },
-                "ids": {
+                "distinct_ids": {
+                    "description": "DistinctIDs matches any listed distinct_id.",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "ip": {
-                    "type": "string"
+                "ids": {
+                    "description": "IDs filters by event row UUIDs.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ips": {
+                    "description": "IPs matches any listed ip (exact).",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "limit": {
                     "type": "integer",
                     "maximum": 100,
                     "minimum": 1
                 },
-                "message_id": {
-                    "type": "string"
+                "message_ids": {
+                    "description": "MessageIDs matches any listed message_id (UUID each).",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255
+                "names": {
+                    "description": "Names matches if event name matches any term (substring ILIKE per term).",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "page": {
                     "type": "integer",
                     "minimum": 1
                 },
-                "project_id": {
-                    "type": "string"
+                "project_ids": {
+                    "description": "ProjectIDs matches any listed project_id.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "session_id": {
-                    "type": "string"
+                "session_ids": {
+                    "description": "SessionIDs matches any listed session_id.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "sort": {
                     "type": "string"
                 },
-                "user_agent": {
-                    "type": "string"
+                "user_agents": {
+                    "description": "UserAgents matches any listed user_agent (exact).",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "user_id": {
-                    "type": "string"
+                "user_ids": {
+                    "description": "UserIDs matches any listed user_id.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
