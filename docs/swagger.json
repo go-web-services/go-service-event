@@ -41,6 +41,40 @@
                 }
             }
         },
+        "/v1/events/create-batch": {
+            "post": {
+                "description": "Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. ip and user_agent apply to every item from the HTTP request.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Ingest multiple analytics events (atomic batch)",
+                "parameters": [
+                    {
+                        "description": "Batch payload",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/events/delete": {
             "post": {
                 "consumes": [
@@ -175,6 +209,34 @@
         }
     },
     "definitions": {
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO": {
+            "type": "object",
+            "required": [
+                "events"
+            ],
+            "properties": {
+                "events": {
+                    "description": "Events is the list of events to ingest in one atomic transaction (max 100).",
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO"
+                    }
+                }
+            }
+        },
+        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    }
+                }
+            }
+        },
         "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO": {
             "type": "object",
             "required": [

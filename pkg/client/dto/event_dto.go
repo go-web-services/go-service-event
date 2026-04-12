@@ -60,6 +60,19 @@ type EventCreateOutputDTO struct {
 	Event EventDTO `json:"event"`
 }
 
+// EventCreateBatchInputDTO is the JSON body for POST /api/v1/events/create-batch.
+// Each item follows EventCreateInputDTO rules; message_id values must be unique within the batch (and across idempotent retries).
+// ip and user_agent are applied from the HTTP request to every event in the batch.
+type EventCreateBatchInputDTO struct {
+	// Events is the list of events to ingest in one atomic transaction (max 100).
+	Events []EventCreateInputDTO `json:"events" validate:"required,min=1,max=100,dive"`
+}
+
+// EventCreateBatchOutputDTO lists persisted events in the same order as the request.
+type EventCreateBatchOutputDTO struct {
+	Events []EventDTO `json:"events"`
+}
+
 type EventUpdateInputDTO struct {
 	ID        string          `json:"id" validate:"required,uuid"`
 	Name      *string         `json:"name,omitempty" validate:"omitempty,min=1,max=255"`

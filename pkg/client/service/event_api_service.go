@@ -11,6 +11,7 @@ import (
 
 type EventAPIService interface {
 	CreateV1(ctx *gin.Context, input dto.EventCreateInputDTO) (dto.EventCreateOutputDTO, error)
+	CreateBatchV1(ctx *gin.Context, input dto.EventCreateBatchInputDTO) (dto.EventCreateBatchOutputDTO, error)
 	UpdateV1(ctx *gin.Context, input dto.EventUpdateInputDTO) (dto.EventUpdateOutputDTO, error)
 	DeleteV1(ctx *gin.Context, input dto.EventDeleteInputDTO) (dto.EventDeleteOutputDTO, error)
 	DetailV1(ctx *gin.Context, input dto.EventDetailInputDTO) (dto.EventDetailOutputDTO, error)
@@ -30,6 +31,13 @@ func NewEventAPIService(host string) EventAPIService {
 func (s *eventAPIService) CreateV1(ctx *gin.Context, input dto.EventCreateInputDTO) (dto.EventCreateOutputDTO, error) {
 	baseURL := fmt.Sprintf("%s/events/create", s.apiURL)
 	var output dto.EventCreateOutputDTO
+	err := platformUtils.SendRequest("POST", baseURL, input, &output, ctx)
+	return output, err
+}
+
+func (s *eventAPIService) CreateBatchV1(ctx *gin.Context, input dto.EventCreateBatchInputDTO) (dto.EventCreateBatchOutputDTO, error) {
+	baseURL := fmt.Sprintf("%s/events/create-batch", s.apiURL)
+	var output dto.EventCreateBatchOutputDTO
 	err := platformUtils.SendRequest("POST", baseURL, input, &output, ctx)
 	return output, err
 }

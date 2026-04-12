@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -92,6 +93,69 @@ func (h *EventHandler) CreateV1(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dto.EventCreateOutputDTO{Event: eventToDTO(*out)})
+}
+
+// CreateBatchV1
+// @Summary Ingest multiple analytics events (atomic batch)
+// @Description Accepts EventCreateBatchInputDTO. All rows are inserted in one transaction. Same rules as single create; duplicate project_id+message_id within the request body is rejected. ip and user_agent apply to every item from the HTTP request.
+// @Tags Events
+// @Accept json
+// @Produce json
+// @Param input body dto.EventCreateBatchInputDTO true "Batch payload"
+// @Success 200 {object} dto.EventCreateBatchOutputDTO
+// @Router /v1/events/create-batch [post]
+func (h *EventHandler) CreateBatchV1(c *gin.Context) {
+	var input dto.EventCreateBatchInputDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		_ = c.Error(platformError.ErrInvalidRequestPayload)
+		return
+	}
+
+	if err := h.validate.Struct(input); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	var ipPtr, uaPtr *string
+	if ip := c.ClientIP(); ip != "" {
+		ipPtr = &ip
+	}
+	if ua := c.Request.UserAgent(); ua != "" {
+		uaPtr = &ua
+	}
+
+	events := make([]*domain.Event, 0, len(input.Events))
+	for i := range input.Events {
+		in := &input.Events[i]
+		events = append(events, &domain.Event{
+			ProjectID:  in.ProjectID,
+			MessageID:  in.MessageID,
+			DistinctID: in.DistinctID,
+			UserID:     in.UserID,
+			SessionID:  in.SessionID,
+			Name:       strings.TrimSpace(in.Name),
+			Payload:    in.Payload,
+			OccurredAt: in.OccurredAt,
+			IP:         ipPtr,
+			UserAgent:  uaPtr,
+		})
+	}
+
+	out, err := h.svc.CreateBatch(c.Request.Context(), events)
+	if err != nil {
+		if errors.Is(err, service.ErrDuplicateBatchKeys) {
+			_ = c.Error(platformError.ErrInvalidRequestPayload)
+			return
+		}
+		_ = c.Error(err)
+		return
+	}
+
+	dtos := make([]dto.EventDTO, 0, len(out))
+	for i := range out {
+		dtos = append(dtos, eventToDTO(out[i]))
+	}
+	c.JSON(http.StatusOK, dto.EventCreateBatchOutputDTO{Events: dtos})
 }
 
 // UpdateV1

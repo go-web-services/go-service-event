@@ -1,5 +1,25 @@
 basePath: /api
 definitions:
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO:
+    properties:
+      events:
+        description: Events is the list of events to ingest in one atomic transaction
+          (max 100).
+        items:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO'
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - events
+    type: object
+  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        type: array
+    type: object
   github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO:
     properties:
       distinct_id:
@@ -257,6 +277,31 @@ paths:
           schema:
             $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO'
       summary: Ingest analytics event
+      tags:
+      - Events
+  /v1/events/create-batch:
+    post:
+      consumes:
+      - application/json
+      description: Accepts EventCreateBatchInputDTO. All rows are inserted in one
+        transaction. Same rules as single create; duplicate project_id+message_id
+        within the request body is rejected. ip and user_agent apply to every item
+        from the HTTP request.
+      parameters:
+      - description: Batch payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO'
+      summary: Ingest multiple analytics events (atomic batch)
       tags:
       - Events
   /v1/events/delete:

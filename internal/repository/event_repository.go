@@ -15,6 +15,7 @@ import (
 
 type EventRepository interface {
 	Create(ctx context.Context, event *domain.Event) error
+	CreateBatch(ctx context.Context, events []*domain.Event) error
 	Update(ctx context.Context, event *domain.Event) error
 	GetByID(ctx context.Context, id string) (*domain.Event, error)
 	Delete(ctx context.Context, id string) (*domain.Event, error)
@@ -73,7 +74,12 @@ func scanEvent(row rowScanner) (*domain.Event, error) {
 	return &ev, nil
 }
 
-func (r *eventRepository) Create(ctx context.Context, event *domain.Event) error {
+// pgxQuerier matches *pgxpool.Pool and pgx.Tx for single-row operations used in Create / CreateBatch.
+type pgxQuerier interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+func (r *eventRepository) createOne(ctx context.Context, q pgxQuerier, event *domain.Event) error {
 	payloadBytes, err := marshalPayload(event.Payload)
 	if err != nil {
 		return fmt.Errorf("marshal payload: %w", err)
@@ -87,7 +93,7 @@ INSERT INTO events (
 ON CONFLICT (project_id, message_id) DO NOTHING
 RETURNING id`
 
-	err = r.db.QueryRow(ctx, insert,
+	err = q.QueryRow(ctx, insert,
 		event.ProjectID,
 		event.MessageID,
 		event.DistinctID,
@@ -111,7 +117,7 @@ RETURNING id`
 SELECT id, project_id, message_id, distinct_id, user_id, session_id, ip, user_agent, name, payload, occurred_at, received_at, deleted_at
 FROM events WHERE project_id = $1 AND message_id = $2 AND deleted_at IS NULL`
 
-	ev, err := scanEvent(r.db.QueryRow(ctx, sel, event.ProjectID, event.MessageID))
+	ev, err := scanEvent(q.QueryRow(ctx, sel, event.ProjectID, event.MessageID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("idempotent insert conflict but row not found: %w", err)
@@ -119,6 +125,34 @@ FROM events WHERE project_id = $1 AND message_id = $2 AND deleted_at IS NULL`
 		return fmt.Errorf("failed to load event after conflict: %w", err)
 	}
 	*event = *ev
+	return nil
+}
+
+func (r *eventRepository) Create(ctx context.Context, event *domain.Event) error {
+	return r.createOne(ctx, r.db, event)
+}
+
+func (r *eventRepository) CreateBatch(ctx context.Context, events []*domain.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin batch tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	for _, ev := range events {
+		if ev == nil {
+			return fmt.Errorf("nil event in batch")
+		}
+		if err := r.createOne(ctx, tx, ev); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit batch tx: %w", err)
+	}
 	return nil
 }
 

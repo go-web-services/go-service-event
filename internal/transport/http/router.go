@@ -29,6 +29,7 @@ func newEventRouterGroup(
 	g := parentGroup.Group("/events")
 	{
 		g.POST("/create", h.CreateV1)
+		g.POST("/create-batch", h.CreateBatchV1)
 		g.POST("/update", h.UpdateV1)
 		g.POST("/delete", h.DeleteV1)
 		g.POST("/detail", h.DetailV1)

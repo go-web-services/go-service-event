@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -13,9 +14,13 @@ import (
 	platformTypes "github.com/Lomank123/go-web-platform/types"
 )
 
+// ErrDuplicateBatchKeys is returned when two items in a batch share the same project_id + message_id.
+var ErrDuplicateBatchKeys = errors.New("duplicate project_id+message_id in batch")
+
 type EventService interface {
 	Detail(ctx context.Context, id string) (*domain.Event, error)
 	Create(ctx context.Context, ev *domain.Event) (*domain.Event, error)
+	CreateBatch(ctx context.Context, events []*domain.Event) ([]domain.Event, error)
 	Update(
 		ctx context.Context,
 		id string,
@@ -52,6 +57,45 @@ func (s *eventService) Create(ctx context.Context, ev *domain.Event) (*domain.Ev
 	}
 
 	return ev, nil
+}
+
+func duplicateKeysInBatch(events []*domain.Event) error {
+	seen := make(map[string]struct{}, len(events))
+	for _, ev := range events {
+		k := ev.ProjectID + "\x00" + ev.MessageID
+		if _, ok := seen[k]; ok {
+			return ErrDuplicateBatchKeys
+		}
+		seen[k] = struct{}{}
+	}
+	return nil
+}
+
+func (s *eventService) CreateBatch(ctx context.Context, events []*domain.Event) ([]domain.Event, error) {
+	if len(events) == 0 {
+		return []domain.Event{}, nil
+	}
+	if err := duplicateKeysInBatch(events); err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	for _, ev := range events {
+		ev.ReceivedAt = now
+		if ev.Payload == nil {
+			ev.Payload = map[string]any{}
+		}
+	}
+
+	if err := s.repo.CreateBatch(ctx, events); err != nil {
+		return nil, err
+	}
+
+	out := make([]domain.Event, len(events))
+	for i, ev := range events {
+		out[i] = *ev
+	}
+	return out, nil
 }
 
 func (s *eventService) Update(
