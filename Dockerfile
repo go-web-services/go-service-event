@@ -23,7 +23,7 @@ RUN go mod download
 RUN go build -o go-service-event ./cmd/app/main.go
 
 # Stage 3: Run Stage
-FROM alpine:3.20.3
+FROM alpine:3.22
 
 WORKDIR /app
 
