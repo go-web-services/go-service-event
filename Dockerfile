@@ -28,6 +28,7 @@ FROM alpine:3.20.3
 WORKDIR /app
 
 COPY --from=builder /app/go-service-event .
+COPY --from=builder /app/migrations ./migrations
 COPY --from=goose-builder /go/bin/goose /usr/local/bin/goose
 
 CMD ["./go-service-event"]
