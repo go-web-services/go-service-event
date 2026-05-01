@@ -1,7 +1,7 @@
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
-github.com/Lomank123/go-web-platform v0.0.0-20260101104215-b236d8714685 h1:doRlP9+dT6GT/aggd3Ee2B6kT8JoQb/wAXmu0r1Apxc=
-github.com/Lomank123/go-web-platform v0.0.0-20260101104215-b236d8714685/go.mod h1:q/epj5yYWyQZZXYU+9h9dwwve8Q+1jhgNCEhVyFjyrw=
+github.com/Lomank123/go-web-platform v0.0.0-20260501093348-670c743eac4f h1:5yzNLPLRkItApHUefjZZXB8le4c58l/v26ErPKbBWtY=
+github.com/Lomank123/go-web-platform v0.0.0-20260501093348-670c743eac4f/go.mod h1:bh/F46dlS+DX5lh+PZP819rX/py7ZtAMT9MN+HXGxho=
 github.com/bytedance/sonic v1.12.8 h1:4xYRVRlXIgvSZ4e8iVTlMF5szgpXd4AfvuWgA8I8lgs=
 github.com/bytedance/sonic v1.12.8/go.mod h1:uVvFidNmlt9+wa31S1urfwwthTWteBgG0hWuoKAXTx8=
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=

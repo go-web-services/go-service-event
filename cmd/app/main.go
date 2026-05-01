@@ -54,7 +54,6 @@ func main() {
 		logg,
 		nil,
 		platformMiddleware.DefaultLoggingConfig(),
-		nil,
 		cfg.App.Env,
 	)
 
