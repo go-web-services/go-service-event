@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateOutputDTO"
                         }
                     }
                 }
@@ -69,7 +69,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchInputDTO"
                         }
                     }
                 ],
@@ -77,7 +77,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO"
                         }
                     }
                 }
@@ -102,7 +102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteInputDTO"
                         }
                     }
                 ],
@@ -110,7 +110,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteOutputDTO"
                         }
                     }
                 }
@@ -135,7 +135,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailInputDTO"
                         }
                     }
                 ],
@@ -143,7 +143,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailOutputDTO"
                         }
                     }
                 }
@@ -169,7 +169,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryInputDTO"
                         }
                     }
                 ],
@@ -177,7 +177,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryOutputDTO"
                         }
                     }
                 }
@@ -202,7 +202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateInputDTO"
                         }
                     }
                 ],
@@ -210,7 +210,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateOutputDTO"
                         }
                     }
                 }
@@ -218,7 +218,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchInputDTO": {
             "type": "object",
             "required": [
                 "events"
@@ -230,23 +230,23 @@ const docTemplate = `{
                     "maxItems": 100,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO"
+                        "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO"
                     }
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO": {
             "type": "object",
             "properties": {
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                        "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                     }
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO": {
             "type": "object",
             "required": [
                 "distinct_id",
@@ -310,20 +310,20 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateOutputDTO": {
             "type": "object",
             "properties": {
                 "event": {
                     "description": "Event is the stored row including server id, received_at, and request-provided ip / user_agent when present.",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                            "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                         }
                     ]
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO": {
             "type": "object",
             "properties": {
                 "deleted_at": {
@@ -392,7 +392,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteInputDTO": {
             "type": "object",
             "required": [
                 "id"
@@ -403,18 +403,18 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteOutputDTO": {
             "type": "object",
             "properties": {
                 "event": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailInputDTO": {
             "type": "object",
             "required": [
                 "id"
@@ -425,23 +425,23 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailOutputDTO": {
             "type": "object",
             "properties": {
                 "event": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventListMetaDTO": {
             "type": "object",
             "properties": {
                 "pagination": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams"
+                    "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.PaginationOutputParams"
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryInputDTO": {
             "type": "object",
             "properties": {
                 "distinct_ids": {
@@ -521,21 +521,21 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryOutputDTO": {
             "type": "object",
             "properties": {
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                        "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                     }
                 },
                 "meta": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO"
+                    "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventListMetaDTO"
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateInputDTO": {
             "type": "object",
             "required": [
                 "id"
@@ -561,15 +561,15 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateOutputDTO": {
             "type": "object",
             "properties": {
                 "event": {
-                    "$ref": "#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO"
+                    "$ref": "#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO"
                 }
             }
         },
-        "github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams": {
+        "github_com_go-web-services_go-service-event_pkg_client_dto.PaginationOutputParams": {
             "type": "object",
             "properties": {
                 "page": {

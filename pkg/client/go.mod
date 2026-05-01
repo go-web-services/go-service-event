@@ -1,11 +1,10 @@
-module github.com/Lomank123/go-service-event/pkg/client
+module github.com/go-web-services/go-service-event/pkg/client
 
 go 1.26.0
 
 require (
-	github.com/Lomank123/go-web-platform v0.0.0-20260101104215-b236d8714685
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-playground/validator/v10 v10.25.0
+	github.com/go-web-services/go-web-platform v0.0.0-20260501150237-122bf32135c9
 )
 
 require (
@@ -16,6 +15,7 @@ require (
 	github.com/gin-contrib/sse v1.0.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.25.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect

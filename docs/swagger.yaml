@@ -1,26 +1,26 @@
 basePath: /api
 definitions:
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchInputDTO:
     properties:
       events:
         description: Events is the list of events to ingest in one atomic transaction
           (max 100).
         items:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO'
         maxItems: 100
         minItems: 1
         type: array
     required:
     - events
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO:
     properties:
       events:
         items:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
         type: array
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO:
     properties:
       distinct_id:
         description: DistinctID is the stable person/device id for analytics (e.g.
@@ -80,15 +80,15 @@ definitions:
     - payload
     - project_id
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateOutputDTO:
     properties:
       event:
         allOf:
-        - $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        - $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
         description: Event is the stored row including server id, received_at, and
           request-provided ip / user_agent when present.
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO:
     properties:
       deleted_at:
         description: DeletedAt is set when the row is soft-deleted.
@@ -152,38 +152,38 @@ definitions:
         example: usr_42
         type: string
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteInputDTO:
     properties:
       id:
         type: string
     required:
     - id
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteOutputDTO:
     properties:
       event:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
       message:
         type: string
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailInputDTO:
     properties:
       id:
         type: string
     required:
     - id
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailOutputDTO:
     properties:
       event:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventListMetaDTO:
     properties:
       pagination:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams'
+        $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.PaginationOutputParams'
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryInputDTO:
     properties:
       distinct_ids:
         description: DistinctIDs matches any listed distinct_id.
@@ -241,16 +241,16 @@ definitions:
           type: string
         type: array
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryOutputDTO:
     properties:
       events:
         items:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
         type: array
       meta:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventListMetaDTO'
+        $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventListMetaDTO'
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateInputDTO:
     properties:
       id:
         type: string
@@ -268,12 +268,12 @@ definitions:
     required:
     - id
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO:
+  github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateOutputDTO:
     properties:
       event:
-        $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDTO'
+        $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDTO'
     type: object
-  github_com_Lomank123_go-service-event_pkg_client_dto.PaginationOutputParams:
+  github_com_go-web-services_go-service-event_pkg_client_dto.PaginationOutputParams:
     properties:
       page:
         type: integer
@@ -302,14 +302,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateOutputDTO'
       summary: Ingest analytics event
       tags:
       - Events
@@ -327,14 +327,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventCreateBatchOutputDTO'
       summary: Ingest multiple analytics events (atomic batch)
       tags:
       - Events
@@ -348,14 +348,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDeleteOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDeleteOutputDTO'
       summary: Soft delete event (sets deleted_at)
       tags:
       - Events
@@ -369,14 +369,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventDetailOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventDetailOutputDTO'
       summary: Get event detail
       tags:
       - Events
@@ -393,14 +393,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventQueryOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventQueryOutputDTO'
       summary: Returns list of events by query
       tags:
       - Events
@@ -414,14 +414,14 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateInputDTO'
+          $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateInputDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Lomank123_go-service-event_pkg_client_dto.EventUpdateOutputDTO'
+            $ref: '#/definitions/github_com_go-web-services_go-service-event_pkg_client_dto.EventUpdateOutputDTO'
       summary: Update event
       tags:
       - Events

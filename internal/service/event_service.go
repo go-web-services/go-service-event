@@ -2,20 +2,24 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
 
-	"github.com/Lomank123/go-service-event/internal/domain"
-	"github.com/Lomank123/go-service-event/internal/repository"
-	"github.com/Lomank123/go-service-event/internal/types"
-	platformTypes "github.com/Lomank123/go-web-platform/types"
+	"github.com/go-web-services/go-service-event/internal/domain"
+	"github.com/go-web-services/go-service-event/internal/repository"
+	"github.com/go-web-services/go-service-event/internal/types"
+	"github.com/go-web-services/go-web-platform/constants"
+	platformError "github.com/go-web-services/go-web-platform/error"
+	platformTypes "github.com/go-web-services/go-web-platform/types"
 )
 
 // ErrDuplicateBatchKeys is returned when two items in a batch share the same project_id + message_id.
-var ErrDuplicateBatchKeys = errors.New("duplicate project_id+message_id in batch")
+var ErrDuplicateBatchKeys = platformError.NewError(
+	constants.InvalidRequestPayload,
+	"duplicate project_id+message_id in batch",
+)
 
 type EventService interface {
 	Detail(ctx context.Context, id string) (*domain.Event, error)
