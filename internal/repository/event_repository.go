@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Lomank123/go-service-event/internal/domain"
-	platformError "github.com/Lomank123/go-web-platform/error"
+	platformError "github.com/go-web-services/go-web-platform/error"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

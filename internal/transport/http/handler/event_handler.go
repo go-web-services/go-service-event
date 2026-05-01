@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -9,11 +8,11 @@ import (
 	"github.com/Lomank123/go-service-event/internal/service"
 	"github.com/Lomank123/go-service-event/internal/types"
 	"github.com/Lomank123/go-service-event/pkg/client/dto"
-	platformError "github.com/Lomank123/go-web-platform/error"
-	"github.com/Lomank123/go-web-platform/logger"
-	platformTypes "github.com/Lomank123/go-web-platform/types"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	platformError "github.com/go-web-services/go-web-platform/error"
+	"github.com/go-web-services/go-web-platform/logger"
+	platformTypes "github.com/go-web-services/go-web-platform/types"
 )
 
 type EventHandler struct {
@@ -131,10 +130,6 @@ func (h *EventHandler) CreateBatchV1(c *gin.Context) {
 
 	out, err := h.svc.CreateBatch(c.Request.Context(), events)
 	if err != nil {
-		if errors.Is(err, service.ErrDuplicateBatchKeys) {
-			_ = c.Error(platformError.ErrInvalidRequestPayload)
-			return
-		}
 		_ = c.Error(err)
 		return
 	}

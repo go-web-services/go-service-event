@@ -3,8 +3,8 @@ package http
 import (
 	"github.com/Lomank123/go-service-event/internal/service"
 	httpHandler "github.com/Lomank123/go-service-event/internal/transport/http/handler"
-	"github.com/Lomank123/go-web-platform/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/go-web-services/go-web-platform/logger"
 )
 
 func SetupRouter(

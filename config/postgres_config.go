@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	platformUtils "github.com/Lomank123/go-web-platform/utils"
+	platformUtils "github.com/go-web-services/go-web-platform/utils"
 )
 
 type PostgresConfig struct {

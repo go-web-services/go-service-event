@@ -18,10 +18,10 @@ import (
 	"github.com/Lomank123/go-service-event/internal/service"
 	userHTTP "github.com/Lomank123/go-service-event/internal/transport/http"
 
-	platform "github.com/Lomank123/go-web-platform/entrypoint"
-	"github.com/Lomank123/go-web-platform/logger"
-	platformMiddleware "github.com/Lomank123/go-web-platform/middleware"
 	"github.com/gin-gonic/gin"
+	platform "github.com/go-web-services/go-web-platform/entrypoint"
+	"github.com/go-web-services/go-web-platform/logger"
+	platformMiddleware "github.com/go-web-services/go-web-platform/middleware"
 )
 
 // @title           Event Service API

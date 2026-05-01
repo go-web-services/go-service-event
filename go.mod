@@ -14,7 +14,7 @@ require (
 
 require (
 	github.com/Lomank123/go-service-event/pkg/client v0.0.0-00010101000000-000000000000
-	github.com/Lomank123/go-web-platform v0.0.0-20260501093348-670c743eac4f
+	github.com/go-web-services/go-web-platform v0.0.0-20260501143236-ffc58be143e9
 	github.com/jackc/pgx/v5 v5.8.0
 )
 

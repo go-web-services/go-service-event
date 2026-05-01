@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	platformUtils "github.com/Lomank123/go-web-platform/utils"
+	platformUtils "github.com/go-web-services/go-web-platform/utils"
 
 	"github.com/Lomank123/go-service-event/pkg/client/dto"
 )
