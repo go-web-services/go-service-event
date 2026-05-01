@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Lomank123/go-service-event/config"
+	"github.com/go-web-services/go-service-event/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

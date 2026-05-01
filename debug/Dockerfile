@@ -8,7 +8,7 @@ FROM golang:1.26-alpine
 ARG GITHUB_TOKEN
 
 ENV GO111MODULE=on \
-    GOPRIVATE=github.com/Lomank123/*
+    GOPRIVATE=github.com/go-web-services/*
 
 RUN apk add --no-cache git ca-certificates tzdata && \
     git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"

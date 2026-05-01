@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	platformUtils "github.com/go-web-services/go-web-platform/utils"
 
-	"github.com/Lomank123/go-service-event/pkg/client/dto"
+	"github.com/go-web-services/go-service-event/pkg/client/dto"
 )
 
 type EventAPIService interface {

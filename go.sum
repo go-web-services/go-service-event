@@ -36,10 +36,8 @@ github.com/go-playground/universal-translator v0.18.1 h1:Bcnm0ZwsGyWbCzImXv+pAJn
 github.com/go-playground/universal-translator v0.18.1/go.mod h1:xekY+UJKNuX9WP91TpwSH2VMlDf28Uj24BCp08ZFTUY=
 github.com/go-playground/validator/v10 v10.25.0 h1:5Dh7cjvzR7BRZadnsVOzPhWsrwUr0nmsZJxEAnFLNO8=
 github.com/go-playground/validator/v10 v10.25.0/go.mod h1:GGzBIJMuE98Ic/kJsBXbz1x/7cByt++cQ+YOuDM5wus=
-github.com/go-web-services/go-web-platform v0.0.0-20260501143236-ffc58be143e9 h1:170wZQHngQy+iayIx9h43Bj71ajofq9xHuuN/fcSon4=
-github.com/go-web-services/go-web-platform v0.0.0-20260501143236-ffc58be143e9/go.mod h1:i66LlYvzJ5LEPo+V2OpXy1256MYA8kwziaKLypxk/bY=
-github.com/go-web-services/go-web-platform v0.0.0-20260501145700-7b0e5deec049 h1:ouy3BOzcGX5cCa068vpXAnOIk9vh7W5MZRFQSK51sBo=
-github.com/go-web-services/go-web-platform v0.0.0-20260501145700-7b0e5deec049/go.mod h1:IKBmu4vdNiM0En4EHMgJTsOEUy6lp/Gn0Df6J2vUa/Q=
+github.com/go-web-services/go-web-platform v0.0.0-20260501150237-122bf32135c9 h1:TpyRfYCcO/l9gfG1k6RtGzZ8DPRr2NsSeVFd5uFEm9A=
+github.com/go-web-services/go-web-platform v0.0.0-20260501150237-122bf32135c9/go.mod h1:IKBmu4vdNiM0En4EHMgJTsOEUy6lp/Gn0Df6J2vUa/Q=
 github.com/goccy/go-json v0.10.5 h1:Fq85nIqj+gXn/S5ahsiTlK3TmC85qgirsdTP/+DeaC4=
 github.com/goccy/go-json v0.10.5/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=

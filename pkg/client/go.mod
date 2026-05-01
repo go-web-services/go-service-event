@@ -1,10 +1,10 @@
-module github.com/Lomank123/go-service-event/pkg/client
+module github.com/go-web-services/go-service-event/pkg/client
 
 go 1.26.0
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-web-services/go-web-platform v0.0.0-20260501143236-ffc58be143e9
+	github.com/go-web-services/go-web-platform v0.0.0-20260501150237-122bf32135c9
 )
 
 require (

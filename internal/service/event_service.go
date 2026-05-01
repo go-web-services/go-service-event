@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Lomank123/go-service-event/internal/domain"
-	"github.com/Lomank123/go-service-event/internal/repository"
-	"github.com/Lomank123/go-service-event/internal/types"
+	"github.com/go-web-services/go-service-event/internal/domain"
+	"github.com/go-web-services/go-service-event/internal/repository"
+	"github.com/go-web-services/go-service-event/internal/types"
 	"github.com/go-web-services/go-web-platform/constants"
 	platformError "github.com/go-web-services/go-web-platform/error"
 	platformTypes "github.com/go-web-services/go-web-platform/types"

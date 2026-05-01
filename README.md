@@ -166,8 +166,8 @@ Consuming modules (same org or downstream services):
 
 ```go
 import (
-    clientapi "github.com/Lomank123/go-service-event/pkg/client/service"
-    "github.com/Lomank123/go-service-event/pkg/client/dto"
+    clientapi "github.com/go-web-services/go-service-event/pkg/client/service"
+    "github.com/go-web-services/go-service-event/pkg/client/dto"
 )
 
 svc := clientapi.NewEventAPIService("http://localhost:8020")
@@ -182,8 +182,59 @@ svc := clientapi.NewEventAPIService("http://localhost:8020")
 
 ## Related
 
-- Platform bootstrap, logging, and HTTP error handling: **`github.com/go-web-services/go-web-platform`** (`refactor-1` as pinned in `go.mod`).
-- In-repo migration notes for platform upgrades: **`docs/migration.md`**.
+- Platform bootstrap, logging, and HTTP error handling: **`github.com/go-web-services/go-web-platform`**.
+
+### Upgrading `go-web-platform`
+
+**`GOPRIVATE` and `GOPROXY` are different.** `GOPRIVATE` is a list of module path prefixes that **always skip the proxy** (set once with `go env -w`; it stays until you change it—you do **not** toggle it before/after each `go get`). **`GOPROXY=direct` in front of a single command** only affects **that** invocation; your global `GOPROXY` is unchanged afterward—there is **nothing to “switch back”.**
+
+The error *“module declares its path as: github.com/Lomank123/go-web-platform but was required as: github.com/go-web-services/…”* when running plain:
+
+```bash
+go get github.com/go-web-services/go-web-platform@main
+```
+
+happens because **the Go module proxy can serve an old ZIP for `@main`** (e.g. `v0.0.0-20260105…` / `8c334a…`) whose `go.mod` still uses the Lomank module path—even if **GitHub `main` is already fixed**. Your shell loading **`.env`** does **not** affect `go`.
+
+**Recommended flow**
+
+1. **One-off** (nothing persisted; default `GOPROXY` elsewhere is unchanged):
+
+```bash
+GOPROXY=direct go get github.com/go-web-services/go-web-platform@main
+(cd pkg/client && GOPROXY=direct go get github.com/go-web-services/go-web-platform@main)
+go mod tidy && (cd pkg/client && go mod tidy)
+```
+
+Do **not** `go env -w GOPROXY=direct`—there is nothing to “remove” afterward.
+
+2. **Persistent** (`$(go env GOENV)` — e.g. `~/Library/Application Support/go/env` on macOS):
+
+```bash
+go env -w GOPRIVATE=github.com/go-web-services/*,github.com/Lomank123/*,github.com/lmk-website/*
+```
+
+Only matching paths skip the proxy; all other modules keep the usual flow. Extend the comma list when you add another private root.
+
+**Alternative:** pin an exact pseudo-version from GitHub instead of `@main`.
+
+```bash
+go get github.com/go-web-services/go-web-platform@v0.0.0-YYYYMMDD-<commit-short>
+```
+
+**`GOPRIVATE` does not block other imports.** It is prefix-based: **only paths that match** are fetched direct from Git and skip `proxy.golang.org`. Everything else (e.g. `github.com/gin-gonic/gin`) still uses the normal proxy unless you listed it too.
+
+**You do not change `GOPRIVATE` every time you bump a version.** Add a new prefix only when you start depending on a module from a **new private host/org** you hadn’t listed yet.
+
+What bit you with the **public** platform was a **bad artifact on the public proxy** (`@main`/`@latest` pointed at an old zip). **Semver tags** on the platform repo make `@latest`-style upgrades boring again.
+
+**Note:** **`go get …@latest`** may still hit a stale incompatible pseudo-version until the platform publishes semver tags—use the one-off **`GOPROXY=direct …@main`**, **`GOPRIVATE`** as above, or an explicit **`@pseudo-version`**.
+
+---
+
+## Go org / account migration
+
+Command-only migration script (**`GOPRIVATE` included**): **[`docs/go-module-org-migration.md`](docs/go-module-org-migration.md)**.
 
 ---
 
