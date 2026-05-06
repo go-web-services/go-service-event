@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
-    restart: always
+    restart: unless-stopped
     ports:
       - "${APP_PORT}:${APP_PORT}"
     env_file:
@@ -24,7 +24,7 @@ services:
   go-service-event-db:
     container_name: go-service-event-db
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     ports:
       - "5437:${POSTGRES_PORT}"
     env_file:

@@ -1,6 +1,7 @@
 services:
   go-service-event:
     container_name: go-service-event
+    restart: unless-stopped
     build:
       context: .
       dockerfile: debug/Dockerfile
@@ -21,6 +22,7 @@ services:
 
   go-service-event-db:
     container_name: go-service-event-db
+    restart: unless-stopped
     image: postgres:15
     ports:
       - "5437:${POSTGRES_PORT}"
