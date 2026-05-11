@@ -1,4 +1,6 @@
-# go-service-event
+Visit main page: [https://github.com/go-web-services](https://github.com/go-web-services)
+
+# Go Web Services - go-service-event
 
 `github.com/go-web-services/go-service-event`
 
